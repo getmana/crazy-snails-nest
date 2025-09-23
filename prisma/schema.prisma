@@ -1,0 +1,188 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int       @id @default(autoincrement())
+  username   String    @unique
+  email      String    @unique
+  password   String
+  role       Role      @default(editor)
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  albums     Album[]
+  comments   Comment[]
+  photos     Photo[]
+  stories    Story[]
+}
+
+model Album {
+  id                Int            @id @default(autoincrement())
+  title             String
+  description       String
+  start_date        DateTime
+  end_date          DateTime
+  created_at        DateTime       @default(now())
+  updated_at        DateTime       @updatedAt
+  preview_image_url String
+  user_id           Int
+  description_en    String?
+  description_uk    String?
+  title_en          String?
+  title_uk          String?
+  user              User           @relation(fields: [user_id], references: [id])
+  comments          Comment[]
+  countries         CountryAlbum[]
+  photos            PhotoAlbum[]
+
+  @@index([user_id])
+}
+
+model Photo {
+  id                     Int                  @id @default(autoincrement())
+  user_id                Int
+  url                    String
+  created_at             DateTime             @default(now())
+  updated_at             DateTime             @updatedAt
+  display_in_story_mode  Boolean              @default(false)
+  carousel_stories       CarouselStory[]
+  comments               Comment[]
+  featured_image_stories FeaturedImageStory[]
+  inline_image_stories   InlineImageStory[]
+  user                   User                 @relation(fields: [user_id], references: [id])
+  albums                 PhotoAlbum[]
+
+  @@index([user_id])
+}
+
+model PhotoAlbum {
+  album_id Int
+  photo_id Int
+  position Int
+  album    Album @relation(fields: [album_id], references: [id])
+  photo    Photo @relation(fields: [photo_id], references: [id])
+
+  @@id([album_id, photo_id])
+  @@unique([album_id, position])
+  @@index([album_id])
+  @@index([photo_id])
+}
+
+model Story {
+  id                     Int                  @id @default(autoincrement())
+  user_id                Int
+  hero_image_url         String?
+  title                  String
+  description            String
+  hero_first             Boolean              @default(true)
+  created_at             DateTime             @default(now())
+  updated_at             DateTime             @updatedAt
+  description_en         String?
+  description_uk         String?
+  title_en               String?
+  title_uk               String?
+  carousel_stories       CarouselStory[]
+  featured_image_stories FeaturedImageStory[]
+  inline_image_stories   InlineImageStory[]
+  user                   User                 @relation(fields: [user_id], references: [id])
+
+  @@index([user_id])
+}
+
+model FeaturedImageStory {
+  photo_id Int
+  story_id Int
+  position Int
+  photo    Photo @relation(fields: [photo_id], references: [id])
+  story    Story @relation(fields: [story_id], references: [id])
+
+  @@id([photo_id, story_id])
+  @@unique([story_id, position])
+  @@index([photo_id])
+  @@index([story_id])
+}
+
+model InlineImageStory {
+  photo_id Int
+  story_id Int
+  position Int
+  photo    Photo @relation(fields: [photo_id], references: [id])
+  story    Story @relation(fields: [story_id], references: [id])
+
+  @@id([photo_id, story_id])
+  @@unique([story_id, position])
+  @@index([photo_id])
+  @@index([story_id])
+}
+
+model CarouselStory {
+  photo_id Int
+  story_id Int
+  position Int
+  photo    Photo @relation(fields: [photo_id], references: [id])
+  story    Story @relation(fields: [story_id], references: [id])
+
+  @@id([photo_id, story_id])
+  @@unique([story_id, position])
+  @@index([photo_id])
+  @@index([story_id])
+}
+
+model Comment {
+  id             Int      @id @default(autoincrement())
+  title          String
+  description    String
+  photo_id       Int
+  album_id       Int
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  user_id        Int
+  country_id     Int?     @unique
+  description_en String?
+  description_uk String?
+  title_en       String?
+  title_uk       String?
+  album          Album    @relation(fields: [album_id], references: [id])
+  country        Country? @relation(fields: [country_id], references: [id])
+  photo          Photo    @relation(fields: [photo_id], references: [id])
+  user           User     @relation(fields: [user_id], references: [id])
+
+  @@unique([photo_id, album_id])
+  @@index([photo_id])
+  @@index([album_id])
+  @@index([user_id])
+}
+
+model Country {
+  id           Int            @id @default(autoincrement())
+  code         String
+  created_at   DateTime       @default(now())
+  updated_at   DateTime       @updatedAt
+  name_en      String
+  name_uk      String
+  Comment      Comment?
+  CountryAlbum CountryAlbum[]
+}
+
+model CountryAlbum {
+  country_id Int
+  album_id   Int
+  position   Int
+  album      Album   @relation(fields: [album_id], references: [id])
+  country    Country @relation(fields: [country_id], references: [id])
+
+  @@id([country_id, album_id])
+  @@unique([album_id, position])
+  @@index([country_id])
+  @@index([album_id])
+}
+
+enum Role {
+  admin
+  editor
+}
