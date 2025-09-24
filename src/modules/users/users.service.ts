@@ -9,8 +9,9 @@ export class UsersService {
 
   async createUser(data: Prisma.UserCreateInput): Promise<User> {
     const { email, password, username, role } = data;
+
     const hashedPassword = await argon2.hash(password);
-    const user = this.prisma.user.create({
+    const user = await this.prisma.user.create({
       data: {
         email,
         username,
