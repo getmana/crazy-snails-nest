@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Role } from '@prisma/client';
 
 export const createUserSchema = z.object({
   username: z.string().min(3, 'Username is required'),
@@ -10,7 +11,10 @@ export const createUserSchema = z.object({
     .regex(/[a-z]/, 'Password must contain a lowercase letter')
     .regex(/[0-9]/, 'Password must contain a number')
     .regex(/[\W_]/, 'Password must contain a special character'),
-  role: z.enum(['admin', 'editor']),
 });
 
-export type CreateUserDto = z.infer<typeof createUserSchema>;
+export type CreateUserPayload = z.infer<typeof createUserSchema>;
+
+export type CreateUserDto = CreateUserPayload & { role: Role };
+
+export type User = Omit<CreateUserDto, 'password'> & { id: number };

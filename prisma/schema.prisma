@@ -12,7 +12,7 @@ model User {
   username   String    @unique
   email      String    @unique
   password   String
-  role       Role      @default(editor)
+  role       Role      
   created_at DateTime  @default(now())
   updated_at DateTime  @updatedAt
   albums     Album[]

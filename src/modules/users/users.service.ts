@@ -1,7 +1,8 @@
 import argon2 from 'argon2';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { User, Prisma } from '@prisma/client';
+import { type User } from './users.dto';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class UsersService {
@@ -20,7 +21,7 @@ export class UsersService {
       },
     });
 
-    return user;
+    return { email, username, id: user.id, role };
   }
 }
 
