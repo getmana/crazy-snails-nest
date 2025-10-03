@@ -18,3 +18,9 @@ export type CreateUserPayload = z.infer<typeof createUserSchema>;
 export type CreateUserDto = CreateUserPayload & { role: Role };
 
 export type User = Omit<CreateUserDto, 'password'> & { id: number };
+
+export const deleteUserSchema = z.object({
+  id: z.number(),
+});
+
+export type DeleteUserPayload = z.infer<typeof deleteUserSchema>;
