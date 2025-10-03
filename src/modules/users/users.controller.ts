@@ -5,18 +5,24 @@ import {
   UsePipes,
   Delete,
   UseGuards,
+  Get,
+  Param,
+  Patch,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import {
   createUserSchema,
   type CreateUserDto,
   type User,
-  type DeleteUserPayload,
-  deleteUserSchema,
+  type UpdateUserDto,
+  updateUserSchema,
 } from './users.dto';
-import { ZodValidationPipe } from 'src/pipes/zod-validation.pipe';
-import { UserExistPipe } from 'src/pipes/user-exist.pipe';
-import { DefaultUserFieldsPipe } from 'src/pipes/default-user-fields.pipe';
+import {
+  UserExistPipe,
+  DefaultUserFieldsPipe,
+  UserActivePipe,
+  ZodValidationPipe,
+} from 'src/pipes';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { AuthGuard } from '@nestjs/passport';
@@ -38,11 +44,31 @@ export class UsersController {
     return this.userService.createUser(userData);
   }
 
-  @Delete()
-  @UsePipes(new ZodValidationPipe(deleteUserSchema))
+  @Get()
+  findAll() {
+    return this.userService.findAll();
+  }
+
+  @Get(':id')
+  findOne(@Param('id', UserActivePipe) id: string) {
+    return this.userService.findOne(+id);
+  }
+
+  @Patch(':id')
+  @UsePipes(new ZodValidationPipe(updateUserSchema))
+  update(
+    @Param('id', UserActivePipe) id: string,
+    @Body() updateUserDto: UpdateUserDto,
+  ) {
+    return this.userService.updateUser(+id, updateUserDto);
+  }
+
+  @Delete(':id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
-  async deleteUser(@Body() data: DeleteUserPayload): Promise<{ id: number }> {
-    return this.userService.deactivateUser(data.id);
+  async deleteUser(
+    @Param('id', UserActivePipe) id: string,
+  ): Promise<{ id: number }> {
+    return this.userService.deactivateUser(+id);
   }
 }

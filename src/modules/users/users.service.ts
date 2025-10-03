@@ -1,7 +1,7 @@
 import argon2 from 'argon2';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { type User } from './users.dto';
+import { UpdateUserDto, type User } from './users.dto';
 import { Prisma } from '@prisma/client';
 
 @Injectable()
@@ -23,6 +23,56 @@ export class UsersService {
     });
 
     return { email, username, id: user.id, role, isActive };
+  }
+
+  async findAll() {
+    const users = await this.prisma.user.findMany({
+      where: {
+        isActive: true,
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        role: true,
+      },
+    });
+
+    return users;
+  }
+
+  async findOne(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: {
+        id,
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        role: true,
+      },
+    });
+
+    return user;
+  }
+
+  async updateUser(id: number, updateUserDto: UpdateUserDto) {
+    const user = await this.prisma.user.update({
+      where: { id },
+      data: {
+        username: updateUserDto.username,
+        email: updateUserDto.email,
+      },
+      select: {
+        id: true,
+        email: true,
+        username: true,
+        role: true,
+      },
+    });
+
+    return user;
   }
 
   async deactivateUser(id: number) {

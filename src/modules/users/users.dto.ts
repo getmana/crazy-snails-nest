@@ -22,8 +22,9 @@ export type CreateUserDto = CreateUserPayload & {
 
 export type User = Omit<CreateUserDto, 'password'> & { id: number };
 
-export const deleteUserSchema = z.object({
-  id: z.number(),
+export const updateUserSchema = z.object({
+  username: z.string().min(3, 'Username is required if provided').optional(),
+  email: z.email({ message: 'Invalid email address' }).optional(),
 });
 
-export type DeleteUserPayload = z.infer<typeof deleteUserSchema>;
+export type UpdateUserDto = z.infer<typeof updateUserSchema>;
