@@ -9,7 +9,7 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async createUser(data: Prisma.UserCreateInput): Promise<User> {
-    const { email, password, username, role } = data;
+    const { email, password, username, role, isActive } = data;
 
     const hashedPassword = await argon2.hash(password);
     const user = await this.prisma.user.create({
@@ -18,10 +18,11 @@ export class UsersService {
         username,
         role,
         password: hashedPassword,
+        isActive,
       },
     });
 
-    return { email, username, id: user.id, role };
+    return { email, username, id: user.id, role, isActive };
   }
 
   async deleteUser(id: number) {

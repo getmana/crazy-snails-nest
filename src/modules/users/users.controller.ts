@@ -16,7 +16,7 @@ import {
 } from './users.dto';
 import { ZodValidationPipe } from 'src/pipes/zod-validation.pipe';
 import { UserExistPipe } from 'src/pipes/user-exist.pipe';
-import { DefaultRolePipe } from 'src/pipes/default-role.pipe';
+import { DefaultUserFieldsPipe } from 'src/pipes/default-user-fields.pipe';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { AuthGuard } from '@nestjs/passport';
@@ -29,7 +29,7 @@ export class UsersController {
   @UsePipes(
     new ZodValidationPipe(createUserSchema),
     UserExistPipe,
-    DefaultRolePipe,
+    DefaultUserFieldsPipe,
   )
   async signupUser(
     @Body()

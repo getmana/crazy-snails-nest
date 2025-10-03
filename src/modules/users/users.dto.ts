@@ -15,7 +15,10 @@ export const createUserSchema = z.object({
 
 export type CreateUserPayload = z.infer<typeof createUserSchema>;
 
-export type CreateUserDto = CreateUserPayload & { role: Role };
+export type CreateUserDto = CreateUserPayload & {
+  role: Role;
+  isActive: boolean;
+};
 
 export type User = Omit<CreateUserDto, 'password'> & { id: number };
 

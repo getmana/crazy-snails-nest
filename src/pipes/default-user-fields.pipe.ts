@@ -3,8 +3,8 @@ import { CreateUserPayload } from 'src/modules/users/users.dto';
 import { Role } from '@prisma/client';
 
 @Injectable()
-export class DefaultRolePipe implements PipeTransform {
+export class DefaultUserFieldsPipe implements PipeTransform {
   transform(value: CreateUserPayload) {
-    return { ...value, role: Role.editor };
+    return { ...value, role: Role.editor, isActive: true };
   }
 }
