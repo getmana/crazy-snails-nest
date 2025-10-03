@@ -25,11 +25,12 @@ export class UsersService {
     return { email, username, id: user.id, role, isActive };
   }
 
-  async deleteUser(id: number) {
-    const deletedUser = await this.prisma.user.delete({
+  async deactivateUser(id: number) {
+    const deactivatedUser = await this.prisma.user.update({
       where: { id },
+      data: { isActive: false },
     });
 
-    return deletedUser.id;
+    return { id: deactivatedUser.id };
   }
 }

@@ -42,7 +42,7 @@ export class UsersController {
   @UsePipes(new ZodValidationPipe(deleteUserSchema))
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
-  async deleteUser(@Body() data: DeleteUserPayload): Promise<void> {
-    await this.userService.deleteUser(data.id);
+  async deleteUser(@Body() data: DeleteUserPayload): Promise<{ id: number }> {
+    return this.userService.deactivateUser(data.id);
   }
 }

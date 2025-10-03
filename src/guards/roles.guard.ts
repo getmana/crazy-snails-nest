@@ -26,8 +26,6 @@ export class RolesGuard implements CanActivate {
     const request: RequestWithUser = context.switchToHttp().getRequest();
     const user = request.user;
 
-    console.log('user.role ==>', user.role);
-    // Smth is missing - no user here when trying delete user
     if (!user || !requiredRoles.some((role) => user.role === role)) {
       throw new ForbiddenException('Insufficient role permissions');
     }
