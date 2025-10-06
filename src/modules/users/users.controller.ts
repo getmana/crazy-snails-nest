@@ -26,6 +26,7 @@ import {
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Roles } from 'src/decorators/roles.decorator';
 import { AuthGuard } from '@nestjs/passport';
+import { SelfOrAdminGuard } from 'src/guards';
 
 @Controller('users')
 export class UsersController {
@@ -55,14 +56,19 @@ export class UsersController {
   }
 
   @Patch(':id')
-  @UsePipes(new ZodValidationPipe(updateUserSchema))
+  @UseGuards(AuthGuard('jwt'), SelfOrAdminGuard)
   update(
     @Param('id', UserActivePipe) id: string,
-    @Body() updateUserDto: UpdateUserDto,
+    @Body(new ZodValidationPipe(updateUserSchema), UserExistPipe)
+    updateUserDto: UpdateUserDto,
   ) {
+    console.log('updateUserDto ==>', updateUserDto);
     return this.userService.updateUser(+id, updateUserDto);
   }
 
+  // TODO
+  // The case to test RolesGuard
+  // Move to SelfOrAdminGuard to allow user delete his account after adding smth role specific
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')
