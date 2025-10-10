@@ -23,8 +23,15 @@ export type CreateUserDto = CreateUserPayload & {
 export type User = Omit<CreateUserDto, 'password'> & { id: number };
 
 export const updateUserSchema = z.object({
-  username: z.string().min(3, 'Username is required if provided').optional(),
-  email: z.email({ message: 'Invalid email address' }).optional(),
+  username: z
+    .string()
+    .min(3, 'Username should be at least 3 characters long if provided')
+    .or(z.literal(''))
+    .optional(),
+  email: z
+    .email({ message: 'Invalid email address' })
+    .or(z.literal(''))
+    .optional(),
 });
 
 export type UpdateUserDto = z.infer<typeof updateUserSchema>;

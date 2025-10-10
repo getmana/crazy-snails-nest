@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { SharedUsersService } from 'src/modules/shared/shared-users.service';
 import { Response } from 'express';
+import { UserStrategyPayload } from './strategies';
 
 export type JwtPayload = {
   email: string;
@@ -24,46 +25,27 @@ export class AuthService {
     return this.userService.validateUser(email, password);
   }
 
-  async signin(user: { id: number; email: string }, res: Response) {
+  async signin(user: { id: number; email: string }) {
     const { id, email } = user;
     const { accessToken, refreshToken } = await this.getTokens({
       id,
       email,
     });
 
-    res.cookie('refresh_token', refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: 7 * 24 * 60 * 60 * 1000,
-    });
-
-    return { accessToken };
+    return { accessToken, refreshToken, id };
   }
 
-  async refreshToken(refreshToken: string, res: Response) {
+  async refreshToken(user: UserStrategyPayload) {
     try {
-      const payload: JwtPayload = this.jwtService.verify(refreshToken, {
-        secret: process.env.REFRESH_SECRET,
-      });
-      const user = await this.userService.findByEmail(payload.email);
-      if (!user) throw new UnauthorizedException();
+      console.log('refreshing token===============>');
       const { id, email } = user;
 
-      const { accessToken, refreshToken: newRefreshToken } =
-        await this.getTokens({
-          id,
-          email,
-        });
-
-      res.cookie('refresh_token', newRefreshToken, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+      const { accessToken, refreshToken } = await this.getTokens({
+        id,
+        email,
       });
 
-      return { accessToken };
+      return { accessToken, refreshToken, id };
     } catch (e) {
       console.error(e);
       throw new UnauthorizedException('Invalid refresh token');

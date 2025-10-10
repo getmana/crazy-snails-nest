@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
-import { UserStrategyPayload } from 'src/modules/auth/jwt.strategy';
+import { UserStrategyPayload } from 'src/modules/auth/strategies';
 
 interface RequestWithUser extends Request {
   user: UserStrategyPayload;
