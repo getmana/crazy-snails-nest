@@ -161,7 +161,7 @@ model Comment {
 
 model Country {
   id           Int            @id @default(autoincrement())
-  code         String
+  code         String         @unique
   created_at   DateTime       @default(now())
   updated_at   DateTime       @updatedAt
   name_en      String
