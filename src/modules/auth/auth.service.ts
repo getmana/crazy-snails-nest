@@ -1,6 +1,6 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { SharedUsersService } from 'src/modules/shared/shared-users.service';
+import { SharedUsersService } from 'src/modules/shared/users/shared-users.service';
 import { Response } from 'express';
 import { UserStrategyPayload } from './strategies';
 

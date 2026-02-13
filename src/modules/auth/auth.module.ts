@@ -5,7 +5,7 @@ import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { JwtStrategy, JwtRefreshStrategy } from './strategies';
 import { AuthController } from './auth.controller';
-import { SharedModule } from '../shared/shared.module';
+import { SharedModule } from '../shared/users/shared.module';
 
 @Module({
   imports: [

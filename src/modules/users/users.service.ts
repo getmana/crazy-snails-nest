@@ -58,11 +58,12 @@ export class UsersService {
   }
 
   async updateUser(id: number, updateUserDto: UpdateUserDto) {
+    console.log('service updateUserDto.email ===>', updateUserDto.email);
     const user = await this.prisma.user.update({
       where: { id },
       data: {
-        username: updateUserDto.username,
-        email: updateUserDto.email,
+        username: updateUserDto.username || undefined,
+        email: updateUserDto.email || undefined,
       },
       select: {
         id: true,

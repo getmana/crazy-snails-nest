@@ -1,6 +1,6 @@
 import argon2 from 'argon2';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
 
 @Injectable()
 export class SharedUsersService {

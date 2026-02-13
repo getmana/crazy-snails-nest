@@ -1,9 +1,17 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ZodFilter } from './filters/zod-error.filter';
+import { join } from 'path';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { FILE_UPLOAD_URL } from './constants';
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  app.useStaticAssets(join(__dirname, '..', FILE_UPLOAD_URL), {
+    prefix: `/${FILE_UPLOAD_URL}/`,
+  });
+
   app.useGlobalFilters(new ZodFilter());
   await app.listen(process.env.PORT ?? 3000);
 }
