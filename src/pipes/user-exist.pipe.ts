@@ -2,6 +2,7 @@ import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateUserDto } from 'src/modules/users/users.dto';
 
+// TODO move prisma call to service layer, use ConflictException
 @Injectable()
 export class UserExistPipe implements PipeTransform {
   constructor(private prisma: PrismaService) {}

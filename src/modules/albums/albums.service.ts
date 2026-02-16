@@ -9,31 +9,49 @@ export class AlbumsService {
 
   async create(createAlbumDto: CreateAlbumDto) {
     const {
+      title,
       titleEn,
       titleUk,
+      description,
       descriptionEn,
       descriptionUk,
-      countries,
+      countryIds,
       startDate,
       endDate,
       previewImageUrl,
+      userId,
     } = createAlbumDto;
-    // TODO Create countries model to get ID from country_album table
 
     const album = await this.prisma.album.create({
       data: {
-        titleEn,
-        titleUk,
-        descriptionEn,
-        descriptionUk,
-        countries,
-        startDate,
-        endDate,
-        previewImageUrl,
+        title,
+        title_en: titleEn,
+        title_uk: titleUk,
+        description,
+        description_en: descriptionEn,
+        description_uk: descriptionUk,
+        start_date: startDate,
+        end_date: endDate,
+        preview_image_url: previewImageUrl,
+        user_id: userId,
+        countries: {
+          create: countryIds.map((id, position) => ({
+            position,
+            country: {
+              connect: { id },
+            },
+          })),
+        },
+      },
+      include: {
+        countries: {
+          include: { country: true },
+          orderBy: { position: 'asc' },
+        },
       },
     });
-    console.log('createAlbumDto', createAlbumDto);
-    return { message: 'This action adds a new album' };
+    console.log('albumId', album.id);
+    return { id: album.id };
   }
 
   findAll() {

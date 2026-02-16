@@ -51,6 +51,8 @@ export const CreateAlbumSchema = z
 
 export type CreateAlbumPayload = z.infer<typeof CreateAlbumSchema>;
 
-export type CreateAlbumDto = CreateAlbumPayload & {
+export type CreateAlbumDto = Omit<CreateAlbumPayload, 'countries'> & {
   previewImageUrl: string;
+  countryIds: number[];
+  userId: number;
 };

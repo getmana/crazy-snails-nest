@@ -1,6 +1,7 @@
 import { PipeTransform, Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 
+// TODO Move prisma call to service layer
 @Injectable()
 export class UserActivePipe implements PipeTransform {
   constructor(private prisma: PrismaService) {}
