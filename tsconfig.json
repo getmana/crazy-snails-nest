@@ -24,7 +24,8 @@
   },
   "include": [
     "src/**/*.ts",
-    "src/@types/**/*.d.ts"
+    "src/@types/**/*.d.ts",
+    "prisma/seeds"
   ],
   "exclude": [
     "node_modules",

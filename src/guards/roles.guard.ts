@@ -5,6 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
+import { ErrorCodes } from 'src/constants/error-codes';
 import { ROLES_KEY } from 'src/decorators/roles.decorator';
 import { UserStrategyPayload } from 'src/modules/auth/strategies';
 
@@ -27,7 +28,10 @@ export class RolesGuard implements CanActivate {
     const user = request.user;
 
     if (!user || !requiredRoles.some((role) => user.role === role)) {
-      throw new ForbiddenException('Insufficient role permissions');
+      throw new ForbiddenException({
+        message: 'Insufficient role permissions',
+        code: ErrorCodes.INSUFFICIENT_PERMISSIONS,
+      });
     }
 
     return true;

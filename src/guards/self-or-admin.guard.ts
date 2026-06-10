@@ -7,6 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
 import { UserStrategyPayload } from 'src/modules/auth/strategies';
+import { ErrorCodes } from 'src/constants/error-codes';
 
 interface RequestWithUser extends Request {
   user: UserStrategyPayload;
@@ -24,7 +25,10 @@ export class SelfOrAdminGuard implements CanActivate {
     const { id: paramsId } = params;
 
     if (!(role === Role.admin || id === +paramsId)) {
-      throw new ForbiddenException('Insufficient role permissions');
+      throw new ForbiddenException({
+        message: 'Insufficient role permissions',
+        code: ErrorCodes.INSUFFICIENT_PERMISSIONS,
+      });
     }
 
     return true;

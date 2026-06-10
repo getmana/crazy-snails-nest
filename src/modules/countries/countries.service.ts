@@ -1,5 +1,6 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { CountryCodesNotFoundException } from 'src/exceptions/country-codes-not-found.exception';
 
 @Injectable()
 export class CountriesService {
@@ -16,12 +17,11 @@ export class CountriesService {
       },
     });
 
-    // TODO throw domain error and in a pipe (HTTP layer) translate it to BadRequestException
     if (countries.length !== codes.length) {
       const found = new Set(countries.map(({ code }) => code));
       const missing = codes.filter((code) => !found.has(code));
 
-      throw new BadRequestException(
+      throw new CountryCodesNotFoundException(
         `Unknown country codes: ${missing.join(', ')}`,
       );
     }

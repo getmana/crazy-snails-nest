@@ -3,6 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { SharedUsersService } from 'src/modules/shared/users/shared-users.service';
 import { Response } from 'express';
 import { UserStrategyPayload } from './strategies';
+import { ErrorCodes } from 'src/constants/error-codes';
 
 export type JwtPayload = {
   email: string;
@@ -48,7 +49,10 @@ export class AuthService {
       return { accessToken, refreshToken, id };
     } catch (e) {
       console.error(e);
-      throw new UnauthorizedException('Invalid refresh token');
+      throw new UnauthorizedException({
+        message: 'Invalid refresh token',
+        code: ErrorCodes.INVALID_REFRESH_TOKEN,
+      });
     }
   }
 
@@ -91,7 +95,10 @@ export class AuthService {
       };
     } catch (e) {
       console.error(e);
-      throw new UnauthorizedException('Token generation failed');
+      throw new UnauthorizedException({
+        message: 'Token generation failed',
+        code: ErrorCodes.TOKEN_GENERATION_FAILED,
+      });
     }
   }
 }

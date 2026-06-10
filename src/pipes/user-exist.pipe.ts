@@ -1,4 +1,5 @@
 import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
+import { ErrorCodes } from 'src/constants/error-codes';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateUserDto } from 'src/modules/users/users.dto';
 
@@ -17,11 +18,13 @@ export class UserExistPipe implements PipeTransform {
     });
 
     if (existingUser) {
-      throw new BadRequestException(
-        existingUser.email === email
-          ? 'A user with this email already exists'
-          : 'A user with this username already exists',
-      );
+      throw new BadRequestException({
+        message:
+          existingUser.email === email
+            ? 'A user with this email already exists'
+            : 'A user with this username already exists',
+        code: ErrorCodes.USER_EXIST,
+      });
     }
 
     return value;
