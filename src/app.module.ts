@@ -5,6 +5,7 @@ import { PrismaModule } from './modules/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AlbumsModule } from './modules/albums/albums.module';
 import { FileUploadModule } from './modules/shared/file-upload/file-upload.module';
+import { LoggerModule } from 'pino-nestjs';
 
 @Module({
   imports: [
@@ -14,6 +15,14 @@ import { FileUploadModule } from './modules/shared/file-upload/file-upload.modul
     AuthModule,
     AlbumsModule,
     FileUploadModule,
+    LoggerModule.forRoot({
+      pinoHttp: {
+        transport:
+          process.env.NODE_ENV !== 'production'
+            ? { target: 'pino-pretty' }
+            : undefined,
+      },
+    }),
   ],
 })
 export class AppModule {}

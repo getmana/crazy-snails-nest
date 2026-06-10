@@ -6,12 +6,16 @@ import {
 } from '@nestjs/common';
 import { ErrorCodes } from 'src/constants/error-codes';
 import { CountryCodesNotFoundException } from 'src/exceptions/country-codes-not-found.exception';
-
+import { PinoLogger, InjectPinoLogger } from 'pino-nestjs';
 import { CountriesService } from 'src/modules/countries/countries.service';
 
 @Injectable()
 export class CountryCodePipe implements PipeTransform {
-  constructor(private countries: CountriesService) {}
+  constructor(
+    private countries: CountriesService,
+    @InjectPinoLogger(CountryCodePipe.name)
+    private logger: PinoLogger,
+  ) {}
 
   async transform(codes: string[]) {
     try {
@@ -24,7 +28,11 @@ export class CountryCodePipe implements PipeTransform {
         });
       }
 
-      console.error('CountryCodePipe error: ', e);
+      this.logger.error(
+        'CountryCodePipe error',
+        e instanceof Error ? e.stack : String(e),
+        CountryCodePipe.name,
+      );
 
       throw new InternalServerErrorException({
         message: 'Internal Server Error',
