@@ -17,9 +17,11 @@ export class CountryCodePipe implements PipeTransform {
     private logger: PinoLogger,
   ) {}
 
-  async transform(codes: string[]) {
+  async transform(codes: { code: string }[]) {
     try {
-      return await this.countries.findCountryByCode(codes);
+      return await this.countries.findCountryByCode(
+        codes.map(({ code }) => code),
+      );
     } catch (e: unknown) {
       if (e instanceof CountryCodesNotFoundException) {
         throw new BadRequestException({

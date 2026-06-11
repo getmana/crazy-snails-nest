@@ -6,7 +6,6 @@ export class ZodValidationPipe implements PipeTransform {
   constructor(private schema: ZodObject) {}
 
   transform(value: unknown) {
-    this.schema.parse(value);
-    return value;
+    return this.schema.parse(value);
   }
 }
