@@ -4,8 +4,9 @@ import { UsersModule } from './modules/users/users.module';
 import { PrismaModule } from './modules/prisma/prisma.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { AlbumsModule } from './modules/albums/albums.module';
-import { FileUploadModule } from './modules/shared/file-upload/file-upload.module';
+import { StorageModule } from './modules/shared/storage/storage.module';
 import { LoggerModule } from 'pino-nestjs';
+import { FilesModule } from './modules/files/files.module';
 
 @Module({
   imports: [
@@ -14,7 +15,7 @@ import { LoggerModule } from 'pino-nestjs';
     PrismaModule,
     AuthModule,
     AlbumsModule,
-    FileUploadModule,
+    StorageModule,
     LoggerModule.forRoot({
       pinoHttp: {
         transport:
@@ -23,6 +24,7 @@ import { LoggerModule } from 'pino-nestjs';
             : undefined,
       },
     }),
+    FilesModule,
   ],
 })
 export class AppModule {}

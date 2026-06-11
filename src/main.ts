@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { ZodFilter } from './filters/zod-error.filter';
+import { FileWriteFilter } from './filters/file-write-error.filter';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { FILE_UPLOAD_URL } from './constants';
@@ -15,7 +16,7 @@ async function bootstrap() {
     prefix: `/${FILE_UPLOAD_URL}/`,
   });
 
-  app.useGlobalFilters(new ZodFilter());
+  app.useGlobalFilters(new ZodFilter(), new FileWriteFilter());
   await app.listen(process.env.PORT ?? 3000);
 }
 bootstrap();
