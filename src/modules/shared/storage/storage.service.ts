@@ -19,11 +19,14 @@ export class StorageService {
     const fileName = `${uniqueSuffix}${fileExt}`;
     const folderName = new Date().toISOString().split('T')[0];
 
-    const path = join(process.cwd(), FILE_UPLOAD_URL, folderName, fileName);
+    const pathName = join(process.cwd(), FILE_UPLOAD_URL, folderName);
+    const path = join(pathName, fileName);
     try {
-      await fs.mkdir(folderName, { recursive: true });
+      await fs.mkdir(pathName, {
+        recursive: true,
+      });
       await fs.writeFile(path, file.buffer);
-      return path;
+      return join(folderName, fileName);
     } catch (e: unknown) {
       this.logger.error(
         'StorageService saveFile error',
