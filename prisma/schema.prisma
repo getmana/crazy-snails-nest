@@ -30,13 +30,14 @@ model Album {
   end_date          DateTime
   created_at        DateTime       @default(now())
   updated_at        DateTime       @updatedAt
-  preview_image_url String
+  preview_image_id  Int
   user_id           Int
   description_en    String?
   description_uk    String?
   title_en          String?
   title_uk          String?
   user              User           @relation(fields: [user_id], references: [id])
+  photo             Photo          @relation(fields: [preview_image_id], references: [id])
   comments          Comment[]
   countries         CountryAlbum[]
   photos            PhotoAlbum[]
@@ -47,16 +48,21 @@ model Album {
 model Photo {
   id                     Int                  @id @default(autoincrement())
   user_id                Int
-  url                    String
+  original_key           String
+  thumbnail_sm_key       String?
+  thumbnail_md_key       String?
   created_at             DateTime             @default(now())
   updated_at             DateTime             @updatedAt
   display_in_story_mode  Boolean              @default(false)
+  status                 Status               @default(pending)
   carousel_stories       CarouselStory[]
   comments               Comment[]
   featured_image_stories FeaturedImageStory[]
   inline_image_stories   InlineImageStory[]
   user                   User                 @relation(fields: [user_id], references: [id])
   albums                 PhotoAlbum[]
+  previewAlbums          Album[]
+  heroStories            Story[]
 
   @@index([user_id])
 }
@@ -77,7 +83,7 @@ model PhotoAlbum {
 model Story {
   id                     Int                  @id @default(autoincrement())
   user_id                Int
-  hero_image_url         String?
+  hero_image_id          Int
   title                  String
   description            String
   hero_first             Boolean              @default(true)
@@ -91,7 +97,7 @@ model Story {
   featured_image_stories FeaturedImageStory[]
   inline_image_stories   InlineImageStory[]
   user                   User                 @relation(fields: [user_id], references: [id])
-
+  photo                  Photo                @relation(fields: [hero_image_id], references: [id])
   @@index([user_id])
 }
 
@@ -186,4 +192,10 @@ model CountryAlbum {
 enum Role {
   admin
   editor
+}
+
+enum Status {
+  pending
+  ready
+  failed
 }
