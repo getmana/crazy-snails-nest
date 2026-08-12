@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { ActivityType } from '@prisma/client';
 
 export const CreateAlbumSchema = z
   .object({
@@ -18,7 +19,13 @@ export const CreateAlbumSchema = z
       .max(5, 'Maximum 5 countries allowed'),
     startDate: z.coerce.date(),
     endDate: z.coerce.date(),
-    previewImageUrl: z.string(),
+    activityTypes: z
+      .array(
+        z.enum(
+          Object.values(ActivityType) as [ActivityType, ...ActivityType[]],
+        ),
+      )
+      .min(1, 'At least one activity type is required'),
   })
   .refine((data) => data.titleEn || data.titleUk, {
     message: 'At least one of titleEn or titleUk must be provided',

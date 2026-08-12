@@ -44,6 +44,11 @@ export class AlbumsController {
     return this.albumsService.findAll();
   }
 
+  @Get('/activity-types')
+  read() {
+    return this.albumsService.readActivityType();
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.albumsService.findOne(+id);

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAlbumDto } from './dto/create-album.dto';
+import { ActivityType } from '@prisma/client';
 // import { UpdateAlbumDto } from './dto/update-album.dto';
 
 @Injectable()
@@ -18,8 +19,8 @@ export class AlbumsService {
       countryIds,
       startDate,
       endDate,
-      previewImageUrl,
       userId,
+      activityTypes,
     } = createAlbumDto;
 
     const album = await this.prisma.album.create({
@@ -32,7 +33,6 @@ export class AlbumsService {
         description_uk: descriptionUk,
         start_date: startDate,
         end_date: endDate,
-        preview_image_id: previewImageUrl,
         user_id: userId,
         countries: {
           create: countryIds.map((id, position) => ({
@@ -40,6 +40,11 @@ export class AlbumsService {
             country: {
               connect: { id },
             },
+          })),
+        },
+        activities: {
+          create: activityTypes.map((activity_type) => ({
+            activity_type,
           })),
         },
       },
@@ -68,5 +73,9 @@ export class AlbumsService {
 
   remove(id: number) {
     return `This action removes a #${id} album`;
+  }
+
+  readActivityType() {
+    return Object.values(ActivityType);
   }
 }
