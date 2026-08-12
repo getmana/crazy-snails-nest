@@ -6,7 +6,7 @@ import { AuthModule } from './modules/auth/auth.module';
 import { AlbumsModule } from './modules/albums/albums.module';
 import { StorageModule } from './modules/shared/storage/storage.module';
 import { LoggerModule } from 'pino-nestjs';
-import { FilesModule } from './modules/files/files.module';
+import { PhotosModule } from './modules/photos/photos.module';
 
 @Module({
   imports: [
@@ -24,7 +24,7 @@ import { FilesModule } from './modules/files/files.module';
             : undefined,
       },
     }),
-    FilesModule,
+    PhotosModule,
   ],
 })
 export class AppModule {}

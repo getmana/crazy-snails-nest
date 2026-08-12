@@ -32,7 +32,7 @@ export class AlbumsService {
         description_uk: descriptionUk,
         start_date: startDate,
         end_date: endDate,
-        preview_image_url: previewImageUrl,
+        preview_image_id: previewImageUrl,
         user_id: userId,
         countries: {
           create: countryIds.map((id, position) => ({
