@@ -30,17 +30,19 @@ model Album {
   end_date          DateTime
   created_at        DateTime       @default(now())
   updated_at        DateTime       @updatedAt
-  preview_image_id  Int
+  preview_image_id  Int?
   user_id           Int
   description_en    String?
   description_uk    String?
   title_en          String?
   title_uk          String?
+  is_published      Boolean        @default(false)
   user              User           @relation(fields: [user_id], references: [id])
-  photo             Photo          @relation(fields: [preview_image_id], references: [id])
+  photo             Photo?          @relation(fields: [preview_image_id], references: [id])
   comments          Comment[]
   countries         CountryAlbum[]
   photos            PhotoAlbum[]
+  activities        AlbumActivity[]
 
   @@index([user_id])
 }
@@ -78,6 +80,14 @@ model PhotoAlbum {
   @@unique([album_id, position])
   @@index([album_id])
   @@index([photo_id])
+}
+
+model AlbumActivity {
+  album_id      Int
+  activity_type ActivityType
+  album         Album @relation(fields: [album_id], references: [id])
+
+  @@id([album_id, activity_type])
 }
 
 model Story {
@@ -198,4 +208,13 @@ enum Status {
   pending
   ready
   failed
+}
+
+enum ActivityType {
+  hiking
+  tracking
+  cycling
+  auto
+  motorcycle
+  city
 }
