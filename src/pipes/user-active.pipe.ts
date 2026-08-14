@@ -1,23 +1,44 @@
-import { PipeTransform, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  PipeTransform,
+  Injectable,
+  NotFoundException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ErrorCodes } from 'src/constants/error-codes';
-import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { PinoLogger, InjectPinoLogger } from 'pino-nestjs';
+import { UsersService } from 'src/modules/users/users.service';
+import { ActiveUserNotFoundException } from 'src/exceptions/active-user-not-found';
 
-// TODO Move prisma call to service layer
 @Injectable()
 export class UserActivePipe implements PipeTransform {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    readonly userService: UsersService,
+    @InjectPinoLogger(UserActivePipe.name) private logger: PinoLogger,
+  ) {}
 
   async transform(value: string) {
     const id = +value;
-    const user = await this.prisma.user.findUnique({
-      where: { id, isActive: true },
-    });
-    if (!user) {
-      throw new NotFoundException({
-        message: `User with ID ${id} not found`,
-        code: ErrorCodes.USER_NOT_FOUND,
+    try {
+      const user = await this.userService.findActiveUser(id);
+      return user.id;
+    } catch (e) {
+      if (e instanceof ActiveUserNotFoundException) {
+        throw new NotFoundException({
+          message: `User with ID ${id} not found`,
+          code: ErrorCodes.USER_NOT_FOUND,
+        });
+      }
+
+      this.logger.error(
+        'CountryCodePipe error',
+        e instanceof Error ? e.stack : String(e),
+        UserActivePipe.name,
+      );
+
+      throw new InternalServerErrorException({
+        message: 'Internal Server Error',
+        code: ErrorCodes.INTERNAL_SERVER_ERROR,
       });
     }
-    return id;
   }
 }

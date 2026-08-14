@@ -3,6 +3,7 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto, type User } from './dto/users.dto';
 import { Prisma } from '@prisma/client';
+import { ActiveUserNotFoundException } from 'src/exceptions/active-user-not-found';
 
 @Injectable()
 export class UsersService {
@@ -54,6 +55,16 @@ export class UsersService {
       },
     });
 
+    return user;
+  }
+
+  async findActiveUser(id: number) {
+    const user = await this.prisma.user.findUnique({
+      where: { id, isActive: true },
+    });
+    if (!user) {
+      throw new ActiveUserNotFoundException(`User with ID ${id} not found`);
+    }
     return user;
   }
 
