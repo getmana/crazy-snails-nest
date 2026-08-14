@@ -3,7 +3,8 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto, type User } from './dto/users.dto';
 import { Prisma } from '@prisma/client';
-import { ActiveUserNotFoundException } from 'src/exceptions/active-user-not-found';
+import { ActiveUserNotFoundException } from 'src/exceptions/active-user-not-found.exception';
+import { UserAlreadyExistsException } from 'src/exceptions/user-already-exists.exception';
 
 @Injectable()
 export class UsersService {
@@ -66,6 +67,27 @@ export class UsersService {
       throw new ActiveUserNotFoundException(`User with ID ${id} not found`);
     }
     return user;
+  }
+
+  async findExistingUser({
+    email,
+    username,
+  }: {
+    email: string;
+    username: string;
+  }) {
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [{ email }, { username }],
+      },
+    });
+    if (existingUser) {
+      throw new UserAlreadyExistsException(
+        existingUser.email === email
+          ? 'A user with this email already exists'
+          : 'A user with this username already exists',
+      );
+    }
   }
 
   async updateUser(id: number, updateUserDto: UpdateUserDto) {

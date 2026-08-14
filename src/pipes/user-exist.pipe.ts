@@ -1,32 +1,45 @@
-import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
+import {
+  PipeTransform,
+  Injectable,
+  ConflictException,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { ErrorCodes } from 'src/constants/error-codes';
-import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { PinoLogger, InjectPinoLogger } from 'pino-nestjs';
 import { CreateUserDto } from 'src/modules/users/dto/users.dto';
+import { UsersService } from 'src/modules/users/users.service';
+import { UserAlreadyExistsException } from 'src/exceptions/user-already-exists.exception';
 
-// TODO move prisma call to service layer, use ConflictException
 @Injectable()
 export class UserExistPipe implements PipeTransform {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    readonly userService: UsersService,
+    @InjectPinoLogger(UserExistPipe.name) private logger: PinoLogger,
+  ) {}
 
   async transform(value: CreateUserDto) {
     const { email, username } = value;
+    try {
+      await this.userService.findExistingUser({ email, username });
+      return value;
+    } catch (e) {
+      if (e instanceof UserAlreadyExistsException) {
+        throw new ConflictException({
+          message: e.message,
+          code: ErrorCodes.USER_EXIST,
+        });
+      }
 
-    const existingUser = await this.prisma.user.findFirst({
-      where: {
-        OR: [{ email }, { username }],
-      },
-    });
+      this.logger.error(
+        'UserExistPipe error',
+        e instanceof Error ? e.stack : String(e),
+        UserExistPipe.name,
+      );
 
-    if (existingUser) {
-      throw new BadRequestException({
-        message:
-          existingUser.email === email
-            ? 'A user with this email already exists'
-            : 'A user with this username already exists',
-        code: ErrorCodes.USER_EXIST,
+      throw new InternalServerErrorException({
+        message: 'Internal Server Error',
+        code: ErrorCodes.INTERNAL_SERVER_ERROR,
       });
     }
-
-    return value;
   }
 }
