@@ -9,6 +9,7 @@ import { CountryCodesNotFoundException } from 'src/exceptions/country-codes-not-
 import { PinoLogger, InjectPinoLogger } from 'pino-nestjs';
 import { CountriesService } from 'src/modules/countries/countries.service';
 
+// TODO currently is left for future needs, no usage at the moment
 @Injectable()
 export class CountryCodePipe implements PipeTransform {
   constructor(

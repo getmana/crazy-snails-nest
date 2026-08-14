@@ -30,4 +30,16 @@ export class CountriesService {
     const map = new Map(countries.map(({ code, id }) => [code, id]));
     return codes.map((code) => map.get(code)!);
   }
+
+  async findAll() {
+    const countries = await this.prisma.country.findMany({
+      select: {
+        id: true,
+        name_en: true,
+        name_uk: true,
+      },
+    });
+
+    return countries;
+  }
 }

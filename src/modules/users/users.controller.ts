@@ -16,7 +16,7 @@ import {
   type User,
   type UpdateUserDto,
   updateUserSchema,
-} from './users.dto';
+} from './dto/users.dto';
 import {
   UserExistPipe,
   DefaultUserFieldsPipe,

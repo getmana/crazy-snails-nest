@@ -16,7 +16,7 @@ export class AlbumsService {
       description,
       descriptionEn,
       descriptionUk,
-      countryIds,
+      countries,
       startDate,
       endDate,
       userId,
@@ -35,7 +35,7 @@ export class AlbumsService {
         end_date: endDate,
         user_id: userId,
         countries: {
-          create: countryIds.map((id, position) => ({
+          create: countries.map((id, position) => ({
             position,
             country: {
               connect: { id },

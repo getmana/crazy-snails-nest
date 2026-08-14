@@ -10,11 +10,7 @@ export const CreateAlbumSchema = z
     descriptionEn: z.string().optional(),
     descriptionUk: z.string().optional(),
     countries: z
-      .array(
-        z.object({
-          code: z.string().min(1, 'Country code must not be empty'),
-        }),
-      )
+      .array(z.number())
       .min(1, 'At least one country is required')
       .max(5, 'Maximum 5 countries allowed'),
     startDate: z.coerce.date(),
@@ -38,7 +34,6 @@ export const CreateAlbumSchema = z
 
 export type CreateAlbumPayload = z.infer<typeof CreateAlbumSchema>;
 
-export type CreateAlbumDto = Omit<CreateAlbumPayload, 'countries'> & {
-  countryIds: number[];
+export type CreateAlbumDto = CreateAlbumPayload & {
   userId: number;
 };

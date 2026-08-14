@@ -1,7 +1,7 @@
 import { PipeTransform, Injectable, BadRequestException } from '@nestjs/common';
 import { ErrorCodes } from 'src/constants/error-codes';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
-import { CreateUserDto } from 'src/modules/users/users.dto';
+import { CreateUserDto } from 'src/modules/users/dto/users.dto';
 
 // TODO move prisma call to service layer, use ConflictException
 @Injectable()

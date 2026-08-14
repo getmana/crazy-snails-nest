@@ -7,10 +7,12 @@ import { AlbumsModule } from './modules/albums/albums.module';
 import { StorageModule } from './modules/shared/storage/storage.module';
 import { LoggerModule } from 'pino-nestjs';
 import { PhotosModule } from './modules/photos/photos.module';
+import { CountriesModule } from './modules/countries/countries.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    CountriesModule,
     UsersModule,
     PrismaModule,
     AuthModule,

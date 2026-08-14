@@ -13,10 +13,8 @@ import {
   type CreateAlbumPayload,
   CreateAlbumSchema,
 } from './dto/create-album.dto';
-// import { UpdateAlbumDto } from './dto/update-album.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { ZodValidationPipe } from 'src/pipes';
-import { CountryCodePipe } from 'src/pipes/country-code.pipe';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { type UserStrategyPayload } from '../auth/strategies';
 
@@ -29,12 +27,10 @@ export class AlbumsController {
   create(
     @Body(new ZodValidationPipe(CreateAlbumSchema))
     createAlbumDto: CreateAlbumPayload,
-    @Body('countries', CountryCodePipe) countryIds: number[],
     @CurrentUser() user: UserStrategyPayload,
   ) {
     return this.albumsService.create({
       ...createAlbumDto,
-      countryIds,
       userId: user.id,
     });
   }

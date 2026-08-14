@@ -1,5 +1,5 @@
 import { PipeTransform, Injectable } from '@nestjs/common';
-import { CreateUserPayload } from 'src/modules/users/users.dto';
+import { CreateUserPayload } from 'src/modules/users/dto/users.dto';
 import { Role } from '@prisma/client';
 
 @Injectable()
