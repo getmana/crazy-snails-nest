@@ -104,8 +104,8 @@ export class UsersService {
       data: {
         username: updateUserDto.username || undefined,
         email: updateUserDto.email || undefined,
-        admin_theme: updateUserDto.adminTheme || undefined,
-        locale: updateUserDto.locale || undefined,
+        admin_theme: updateUserDto.adminTheme,
+        locale: updateUserDto.locale,
       },
       select: {
         id: true,
