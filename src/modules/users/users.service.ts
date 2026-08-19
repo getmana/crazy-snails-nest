@@ -1,8 +1,7 @@
 import argon2 from 'argon2';
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { UpdateUserDto, type User } from './dto/users.dto';
-import { Prisma } from '@prisma/client';
+import { CreateUserDto, UpdateUserDto, type User } from './dto/users.dto';
 import { ActiveUserNotFoundException } from 'src/exceptions/active-user-not-found.exception';
 import { UserAlreadyExistsException } from 'src/exceptions/user-already-exists.exception';
 
@@ -10,8 +9,8 @@ import { UserAlreadyExistsException } from 'src/exceptions/user-already-exists.e
 export class UsersService {
   constructor(private prisma: PrismaService) {}
 
-  async createUser(data: Prisma.UserCreateInput): Promise<User> {
-    const { email, password, username, role, isActive } = data;
+  async createUser(data: CreateUserDto): Promise<User> {
+    const { email, password, username, role, isActive, locale } = data;
 
     const hashedPassword = await argon2.hash(password);
     const user = await this.prisma.user.create({
@@ -19,12 +18,20 @@ export class UsersService {
         email,
         username,
         role,
+        locale,
         password: hashedPassword,
         isActive,
       },
     });
 
-    return { email, username, id: user.id, role, isActive };
+    return {
+      email,
+      username,
+      id: user.id,
+      role,
+      isActive,
+      locale: user.locale,
+    };
   }
 
   async findAll() {
@@ -97,12 +104,16 @@ export class UsersService {
       data: {
         username: updateUserDto.username || undefined,
         email: updateUserDto.email || undefined,
+        admin_theme: updateUserDto.adminTheme || undefined,
+        locale: updateUserDto.locale || undefined,
       },
       select: {
         id: true,
         email: true,
         username: true,
         role: true,
+        admin_theme: true,
+        locale: true,
       },
     });
 

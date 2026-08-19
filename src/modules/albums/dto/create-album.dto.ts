@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { ActivityType } from '@prisma/client';
+import { prismaEnumValues } from 'src/utils/prismaEnumValues';
 
 export const CreateAlbumSchema = z
   .object({
@@ -16,11 +17,7 @@ export const CreateAlbumSchema = z
     startDate: z.coerce.date(),
     endDate: z.coerce.date(),
     activityTypes: z
-      .array(
-        z.enum(
-          Object.values(ActivityType) as [ActivityType, ...ActivityType[]],
-        ),
-      )
+      .array(z.enum(prismaEnumValues(ActivityType)))
       .min(1, 'At least one activity type is required'),
   })
   .refine((data) => data.titleEn || data.titleUk, {

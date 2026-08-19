@@ -1,9 +1,11 @@
 import { z } from 'zod';
-import { Role } from '@prisma/client';
+import { Role, Locale, AdminTheme } from '@prisma/client';
+import { prismaEnumValues } from 'src/utils/prismaEnumValues';
 
 export const createUserSchema = z.object({
   username: z.string().min(3, 'Username is required'),
   email: z.email({ message: 'Invalid email address' }),
+  locale: z.enum(prismaEnumValues(Locale)),
   password: z
     .string()
     .min(8, 'Password must be at least 8 characters')
@@ -32,6 +34,8 @@ export const updateUserSchema = z.object({
     .email({ message: 'Invalid email address' })
     .or(z.literal(''))
     .optional(),
+  adminTheme: z.enum(prismaEnumValues(AdminTheme)).optional(),
+  locale: z.enum(prismaEnumValues(Locale)).optional(),
 });
 
 export type UpdateUserDto = z.infer<typeof updateUserSchema>;
