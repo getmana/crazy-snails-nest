@@ -22,7 +22,10 @@ export type CreateUserDto = CreateUserPayload & {
   isActive: boolean;
 };
 
-export type User = Omit<CreateUserDto, 'password'> & { id: number };
+export type User = Omit<CreateUserDto, 'password'> & {
+  id: number;
+  adminTheme: AdminTheme;
+};
 
 export const updateUserSchema = z.object({
   username: z

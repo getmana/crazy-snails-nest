@@ -4,6 +4,7 @@ import { SharedUsersService } from 'src/modules/shared/users/shared-users.servic
 import { Response } from 'express';
 import { UserStrategyPayload } from './strategies';
 import { ErrorCodes } from 'src/constants/error-codes';
+import { AdminTheme, Locale } from '@prisma/client';
 
 export type JwtPayload = {
   email: string;
@@ -26,14 +27,19 @@ export class AuthService {
     return this.userService.validateUser(email, password);
   }
 
-  async signin(user: { id: number; email: string }) {
-    const { id, email } = user;
+  async signin(user: {
+    id: number;
+    email: string;
+    locale: Locale;
+    admin_theme: AdminTheme;
+  }) {
+    const { id, email, locale, admin_theme } = user;
     const { accessToken, refreshToken } = await this.getTokens({
       id,
       email,
     });
 
-    return { accessToken, refreshToken, id };
+    return { accessToken, refreshToken, id, locale, adminTheme: admin_theme };
   }
 
   async refreshToken(user: UserStrategyPayload) {

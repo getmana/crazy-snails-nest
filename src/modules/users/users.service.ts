@@ -31,6 +31,7 @@ export class UsersService {
       role,
       isActive,
       locale: user.locale,
+      adminTheme: user.admin_theme,
     };
   }
 
@@ -117,7 +118,14 @@ export class UsersService {
       },
     });
 
-    return user;
+    return {
+      id,
+      email: user.email,
+      username: user.username,
+      role: user.role,
+      adminTheme: user.admin_theme,
+      locale: user.locale,
+    };
   }
 
   async deactivateUser(id: number) {
