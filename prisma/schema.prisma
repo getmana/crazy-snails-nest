@@ -8,18 +8,20 @@ datasource db {
 }
 
 model User {
-  id         Int       @id @default(autoincrement())
-  username   String    @unique
-  email      String    @unique
-  password   String
-  role       Role
-  isActive   Boolean
-  created_at DateTime  @default(now())
-  updated_at DateTime  @updatedAt
-  albums     Album[]
-  comments   Comment[]
-  photos     Photo[]
-  stories    Story[]
+  id          Int         @id @default(autoincrement())
+  username    String      @unique
+  email       String      @unique
+  password    String
+  role        Role
+  locale      Locale      @default(uk)
+  admin_theme AdminTheme  @default(light)
+  isActive    Boolean
+  created_at  DateTime    @default(now())
+  updated_at  DateTime    @updatedAt
+  albums      Album[]
+  comments    Comment[]
+  photos      Photo[]
+  stories     Story[]
 }
 
 model Album {
@@ -217,4 +219,14 @@ enum ActivityType {
   auto
   motorcycle
   city
+}
+
+enum Locale {
+  en
+  uk
+}
+
+enum AdminTheme {
+  dark
+  light
 }
