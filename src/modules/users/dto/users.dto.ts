@@ -31,12 +31,8 @@ export const updateUserSchema = z.object({
   username: z
     .string()
     .min(3, 'Username should be at least 3 characters long if provided')
-    .or(z.literal(''))
     .optional(),
-  email: z
-    .email({ message: 'Invalid email address' })
-    .or(z.literal(''))
-    .optional(),
+  email: z.email({ message: 'Invalid email address' }).optional(),
   adminTheme: z.enum(prismaEnumValues(AdminTheme)).optional(),
   locale: z.enum(prismaEnumValues(Locale)).optional(),
 });
