@@ -62,7 +62,6 @@ export class UsersController {
     @Body(new ZodValidationPipe(updateUserSchema), UserExistPipe)
     updateUserDto: UpdateUserDto,
   ) {
-    console.log('updateUserDto ==>', updateUserDto);
     return this.userService.updateUser(+id, updateUserDto);
   }
 

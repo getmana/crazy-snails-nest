@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { ActivityType } from '@prisma/client';
-import { prismaEnumValues } from 'src/utils/prismaEnumValues';
+import { prismaEnumValues } from 'src/utils';
 
 export const CreateAlbumSchema = z
   .object({

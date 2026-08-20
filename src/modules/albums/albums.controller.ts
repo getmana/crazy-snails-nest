@@ -3,7 +3,6 @@ import {
   Get,
   Post,
   Body,
-  // Patch,
   Param,
   Delete,
   UseGuards,
@@ -49,11 +48,6 @@ export class AlbumsController {
   findOne(@Param('id') id: string) {
     return this.albumsService.findOne(+id);
   }
-
-  // @Patch(':id')
-  // update(@Param('id') id: string, @Body() updateAlbumDto: UpdateAlbumDto) {
-  //   return this.albumsService.update(+id, updateAlbumDto);
-  // }
 
   @Delete(':id')
   remove(@Param('id') id: string) {

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { Role, Locale, AdminTheme } from '@prisma/client';
-import { prismaEnumValues } from 'src/utils/prismaEnumValues';
+import { prismaEnumValues } from 'src/utils';
 
 export const createUserSchema = z.object({
   username: z.string().min(3, 'Username is required'),

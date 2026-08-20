@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { ActivityType } from '@prisma/client';
-// import { UpdateAlbumDto } from './dto/update-album.dto';
 
 @Injectable()
 export class AlbumsService {
@@ -55,7 +54,7 @@ export class AlbumsService {
         },
       },
     });
-    console.log('albumId', album.id);
+
     return { id: album.id };
   }
 
@@ -66,10 +65,6 @@ export class AlbumsService {
   findOne(id: number) {
     return `This action returns a #${id} album`;
   }
-
-  // update(id: number, updateAlbumDto: UpdateAlbumDto) {
-  //   return `This action updates a #${id} album`;
-  // }
 
   remove(id: number) {
     return `This action removes a #${id} album`;

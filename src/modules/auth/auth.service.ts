@@ -1,10 +1,10 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { SharedUsersService } from 'src/modules/shared/users/shared-users.service';
-import { Response } from 'express';
 import { UserStrategyPayload } from './strategies';
-import { ErrorCodes } from 'src/constants/error-codes';
 import { AdminTheme, Locale } from '@prisma/client';
+import { TokenGenerationFailedException } from 'src/exceptions';
+import { PinoLogger, InjectPinoLogger } from 'pino-nestjs';
 
 export type JwtPayload = {
   email: string;
@@ -21,6 +21,7 @@ export class AuthService {
   constructor(
     private userService: SharedUsersService,
     private jwtService: JwtService,
+    @InjectPinoLogger(AuthService.name) private logger: PinoLogger,
   ) {}
 
   async validateUser(email: string, password: string) {
@@ -43,33 +44,15 @@ export class AuthService {
   }
 
   async refreshToken(user: UserStrategyPayload) {
-    try {
-      console.log('refreshing token===============>');
-      const { id, email } = user;
+    console.log('refreshing token===============>');
+    const { id, email } = user;
 
-      const { accessToken, refreshToken } = await this.getTokens({
-        id,
-        email,
-      });
-
-      return { accessToken, refreshToken, id };
-    } catch (e) {
-      console.error(e);
-      throw new UnauthorizedException({
-        message: 'Invalid refresh token',
-        code: ErrorCodes.INVALID_REFRESH_TOKEN,
-      });
-    }
-  }
-
-  signout(res: Response) {
-    res.clearCookie('refresh_token', {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+    const { accessToken, refreshToken } = await this.getTokens({
+      id,
+      email,
     });
 
-    return { message: 'Logged out successfully' };
+    return { accessToken, refreshToken, id };
   }
 
   async getTokens({
@@ -100,11 +83,13 @@ export class AuthService {
         refreshToken,
       };
     } catch (e) {
-      console.error(e);
-      throw new UnauthorizedException({
-        message: 'Token generation failed',
-        code: ErrorCodes.TOKEN_GENERATION_FAILED,
-      });
+      this.logger.error(
+        'AuthService error',
+        e instanceof Error ? e.stack : String(e),
+        AuthService.name,
+      );
+
+      throw new TokenGenerationFailedException('Token generation failed');
     }
   }
 }

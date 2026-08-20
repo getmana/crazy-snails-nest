@@ -7,7 +7,6 @@ export class CountriesService {
   constructor(private prisma: PrismaService) {}
 
   async findCountryByCode(codes: string[]): Promise<number[]> {
-    console.log('COUNTRIES CERVICE codes==>', codes);
     const countries = await this.prisma.country.findMany({
       where: {
         code: { in: codes },
