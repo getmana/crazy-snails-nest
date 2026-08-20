@@ -1,98 +1,78 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# basimtuklet — Backend API
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+REST API for Basimtuklet — a traveller's platform for sharing photo stories and adventures.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+**Frontend repo:** [crazy-snails-front](https://github.com/getmana/crazy-snails-front)
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## What is Basimtuklet?
 
-## Project setup
+Basimtuklet is a multi-user platform where each user gets their own subdomain (e.g., `crazysnails.basimtuklet.com`) to publish travel photo-stories and albums.
 
-```bash
-$ npm install
-```
+The idea came from a real frustration with Google Photos: **photo order is unpredictable**, and when photos tell a sequential story — a motorcycle trip, a hiking route, a day in a city — order is everything. Basimtuklet gives users a drag-and-drop canvas to set the exact order, and builds richer formats on top of that foundation:
 
-## Compile and run the project
+- **Albums** — viewed as a photo wall, in story mode (photos with comments), or on an interactive map of the journey
+- **Stories** — narrative pieces that mix text and photos in flexible layouts
+- **Custom section** — a per-user area to highlight whatever matters most to them (a themed album set, a single standout piece, anything)
 
-```bash
-# development
-$ npm run start
+## About this repo
 
-# watch mode
-$ npm run start:dev
+This is the backend, built as a hands-on learning project to grow NestJS and API design skills through real product development. Active work in progress.
 
-# production mode
-$ npm run start:prod
-```
+## Tech stack
 
-## Run tests
+- **NestJS** + TypeScript
+- **Prisma** ORM + **PostgreSQL**
+- **Zod** — request validation at the HTTP boundary
+- **JWT** + **Passport** — authentication with access + refresh token rotation
+- **pino** (`pino-nestjs`) — structured logging
+- **Multer** — file upload (memory storage)
 
-```bash
-# unit tests
-$ npm run test
+## Architecture highlights
 
-# e2e tests
-$ npm run test:e2e
+- **Strict layering**: Controller → Service → Prisma. No HTTP types in services, no Prisma types leaking into controllers.
+- **Domain errors**: services throw plain `Error` subclasses; controllers translate them to HTTP exceptions. Business logic stays framework-agnostic.
+- **Global exception filters**: Prisma constraint errors mapped to structured responses (P2002 → 409, P2025 → 404); Zod validation errors handled uniformly.
+- **Storage abstraction**: `StorageService` returns storage keys, not URLs. Calling code constructs URLs at read time — swap local disk for S3/R2 by changing one service.
+- **Structured error codes**: responses carry `{ message, code }` so the frontend handles i18n — the backend never decides what to show the user.
 
-# test coverage
-$ npm run test:cov
-```
+## Current state
 
-## Deployment
+**Implemented**
+- Auth — sign-in, sign-out, JWT refresh token rotation
+- Users — CRUD, deactivation, locale and theme preferences
+- Albums — create (with activity types, countries, date range), list, get, delete
+- Photos — upload endpoint, returns original URL
+- Countries — seed data + lookup endpoint
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+**Planned / in progress**
+- Photo reordering with drag-and-drop
+- Photo processing pipeline (thumbnails, WebP)
+- Stories module
+- Album story-mode view
+- Interactive map per album
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## Running locally
 
 ```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+npm install
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+Create a `.env` file:
+```
+DATABASE_URL=postgresql://...
+JWT_SECRET=...
+REFRESH_SECRET=...
+```
 
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+```bash
+npx prisma migrate dev
+npm run start:dev
+```
 
 ## License
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+The source code is licensed under the [MIT License](LICENSE).
+
+The name **Basimtuklet**, the name and logo of **CrazySnails**, and any associated content (text, photographs, design assets) are the property of Anastasia Hetman © 2025. All rights reserved. The MIT license does not extend to these materials.
