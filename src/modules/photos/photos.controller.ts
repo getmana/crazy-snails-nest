@@ -8,6 +8,14 @@ import {
   FileTypeValidator,
   UseGuards,
 } from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiConsumes,
+  ApiBody,
+  ApiResponse,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { FileUploadInterceptor } from 'src/interceptors';
 import { PhotosService } from './photos.service';
@@ -16,6 +24,7 @@ import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { type UserStrategyPayload } from '../auth/strategies';
 import { CreatePhotoDto } from './dto/create-photo.dto';
 
+@ApiTags('photos')
 @Controller('photos')
 export class PhotosController {
   constructor(private readonly photosService: PhotosService) {}
@@ -23,6 +32,24 @@ export class PhotosController {
   @Post()
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(FileUploadInterceptor)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Upload a photo (jpg/jpeg/png, max 10MB)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+      },
+      required: ['file'],
+    },
+  })
+  @ApiResponse({
+    status: 201,
+    description: 'Photo uploaded, returns photo id and original URL',
+  })
+  @ApiResponse({ status: 400, description: 'Invalid file type or size' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   createPhoto(
     @UploadedFile(
       new ParseFilePipe({
