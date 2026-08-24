@@ -185,7 +185,7 @@ model Country {
   updated_at   DateTime       @updatedAt
   name_en      String
   name_uk      String
-  note         Note[]
+  notes        Note[]
   CountryAlbum CountryAlbum[]
 }
 
