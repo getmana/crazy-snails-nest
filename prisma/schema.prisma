@@ -19,7 +19,7 @@ model User {
   created_at  DateTime    @default(now())
   updated_at  DateTime    @updatedAt
   albums      Album[]
-  comments    Comment[]
+  notes       Note[]
   photos      Photo[]
   stories     Story[]
 }
@@ -41,7 +41,7 @@ model Album {
   is_published      Boolean        @default(false)
   user              User           @relation(fields: [user_id], references: [id])
   photo             Photo?          @relation(fields: [preview_image_id], references: [id])
-  comments          Comment[]
+  notes             Note[]
   countries         CountryAlbum[]
   photos            PhotoAlbum[]
   activities        AlbumActivity[]
@@ -60,9 +60,9 @@ model Photo {
   display_in_story_mode  Boolean              @default(false)
   status                 Status               @default(pending)
   carousel_stories       CarouselStory[]
-  comments               Comment[]
-  featured_image_stories FeaturedImageStory[]
-  inline_image_stories   InlineImageStory[]
+  notes                  Note[]
+  gallery_image_stories  GalleryImageStory[]
+  pair_image_stories     PairImageStory[]
   user                   User                 @relation(fields: [user_id], references: [id])
   albums                 PhotoAlbum[]
   previewAlbums          Album[]
@@ -95,7 +95,7 @@ model AlbumActivity {
 model Story {
   id                     Int                  @id @default(autoincrement())
   user_id                Int
-  hero_image_id          Int
+  hero_image_id          Int?
   title                  String
   description            String
   hero_first             Boolean              @default(true)
@@ -106,14 +106,14 @@ model Story {
   title_en               String?
   title_uk               String?
   carousel_stories       CarouselStory[]
-  featured_image_stories FeaturedImageStory[]
-  inline_image_stories   InlineImageStory[]
+  gallery_image_stories  GalleryImageStory[]
+  pair_image_stories     PairImageStory[]
   user                   User                 @relation(fields: [user_id], references: [id])
-  photo                  Photo                @relation(fields: [hero_image_id], references: [id])
+  photo                  Photo?               @relation(fields: [hero_image_id], references: [id])
   @@index([user_id])
 }
 
-model FeaturedImageStory {
+model GalleryImageStory {
   photo_id Int
   story_id Int
   position Int
@@ -126,7 +126,7 @@ model FeaturedImageStory {
   @@index([story_id])
 }
 
-model InlineImageStory {
+model PairImageStory {
   photo_id Int
   story_id Int
   position Int
@@ -152,7 +152,7 @@ model CarouselStory {
   @@index([story_id])
 }
 
-model Comment {
+model Note {
   id             Int      @id @default(autoincrement())
   title          String
   description    String
@@ -161,11 +161,12 @@ model Comment {
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
   user_id        Int
-  country_id     Int?     @unique
+  country_id     Int?
   description_en String?
   description_uk String?
   title_en       String?
   title_uk       String?
+  date           DateTime
   album          Album    @relation(fields: [album_id], references: [id])
   country        Country? @relation(fields: [country_id], references: [id])
   photo          Photo    @relation(fields: [photo_id], references: [id])
@@ -184,7 +185,7 @@ model Country {
   updated_at   DateTime       @updatedAt
   name_en      String
   name_uk      String
-  Comment      Comment?
+  note         Note[]
   CountryAlbum CountryAlbum[]
 }
 
