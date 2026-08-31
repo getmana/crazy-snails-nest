@@ -8,6 +8,7 @@ import { StorageModule } from './modules/shared/storage/storage.module';
 import { LoggerModule } from 'pino-nestjs';
 import { PhotosModule } from './modules/photos/photos.module';
 import { CountriesModule } from './modules/countries/countries.module';
+import { StoriesModule } from './modules/stories/stories.module';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { CountriesModule } from './modules/countries/countries.module';
       },
     }),
     PhotosModule,
+    StoriesModule,
   ],
 })
 export class AppModule {}

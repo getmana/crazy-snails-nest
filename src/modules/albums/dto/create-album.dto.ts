@@ -22,11 +22,9 @@ export const CreateAlbumSchema = z
   })
   .refine((data) => data.titleEn || data.titleUk, {
     message: 'At least one of titleEn or titleUk must be provided',
-    path: ['titleEn', 'titleUk'],
   })
   .refine((data) => data.descriptionEn || data.descriptionUk, {
     message: 'At least one of descriptionEn or descriptionUk must be provided',
-    path: ['descriptionEn', 'descriptionUk'],
   });
 
 export type CreateAlbumPayload = z.infer<typeof CreateAlbumSchema>;
