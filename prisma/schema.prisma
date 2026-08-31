@@ -97,7 +97,7 @@ model Story {
   user_id                Int
   hero_image_id          Int?
   title                  String
-  description            String
+  description            String?
   hero_first             Boolean              @default(true)
   created_at             DateTime             @default(now())
   updated_at             DateTime             @updatedAt
@@ -108,6 +108,7 @@ model Story {
   carousel_stories       CarouselStory[]
   gallery_image_stories  GalleryImageStory[]
   pair_image_stories     PairImageStory[]
+  is_published           Boolean              @default(false)
   user                   User                 @relation(fields: [user_id], references: [id])
   photo                  Photo?               @relation(fields: [hero_image_id], references: [id])
   @@index([user_id])
