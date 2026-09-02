@@ -1,4 +1,12 @@
-import { Controller, Post, UseGuards, Body } from '@nestjs/common';
+import {
+  Controller,
+  Post,
+  UseGuards,
+  Body,
+  Get,
+  Param,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
   CreateStorySchema,
@@ -14,8 +22,10 @@ import {
   ApiBody,
   ApiResponse,
   ApiBearerAuth,
+  ApiParam,
 } from '@nestjs/swagger';
 import { zodToApiSchema } from 'src/utils';
+import { OptionalJwtGuard } from 'src/guards';
 
 @ApiTags('stories')
 @Controller('stories')
@@ -30,7 +40,7 @@ export class StoriesController {
     description: 'At least one of titleEn / titleUk is required.',
   })
   @ApiBody({ schema: zodToApiSchema(CreateStorySchema) })
-  @ApiResponse({ status: 201, description: 'Story created, returns story' })
+  @ApiResponse({ status: 201, description: 'Story created, returns story ID' })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   create(
@@ -42,5 +52,23 @@ export class StoriesController {
       ...createStoryDto,
       userId: user.id,
     });
+  }
+
+  @Get(':id')
+  @UseGuards(OptionalJwtGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get a single story by ID',
+    description:
+      'Auth is optional. Unauthenticated requests return only published stories. Authenticated owners also see their own unpublished drafts.',
+  })
+  @ApiParam({ name: 'id', type: 'number' })
+  @ApiResponse({ status: 200, description: 'Story found' })
+  @ApiResponse({ status: 404, description: 'Story not found' })
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserStrategyPayload | null,
+  ) {
+    return await this.storiesService.findOne(id, user?.id ?? null);
   }
 }

@@ -72,8 +72,8 @@ export class UsersController {
   @ApiParam({ name: 'id', type: 'number' })
   @ApiResponse({ status: 200, description: 'User found' })
   @ApiResponse({ status: 404, description: 'User not found or inactive' })
-  findOne(@Param('id', UserActivePipe) id: string) {
-    return this.userService.findOne(+id);
+  findOne(@Param('id', UserActivePipe) id: number) {
+    return this.userService.findOne(id);
   }
 
   @Patch(':id')
@@ -87,11 +87,11 @@ export class UsersController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'User not found or inactive' })
   update(
-    @Param('id', UserActivePipe) id: string,
+    @Param('id', UserActivePipe) id: number,
     @Body(new ZodValidationPipe(updateUserSchema), UserExistPipe)
     updateUserDto: UpdateUserDto,
   ) {
-    return this.userService.updateUser(+id, updateUserDto);
+    return this.userService.updateUser(id, updateUserDto);
   }
 
   // TODO
@@ -108,8 +108,8 @@ export class UsersController {
   @ApiResponse({ status: 403, description: 'Forbidden — admin role required' })
   @ApiResponse({ status: 404, description: 'User not found or inactive' })
   async deleteUser(
-    @Param('id', UserActivePipe) id: string,
+    @Param('id', UserActivePipe) id: number,
   ): Promise<{ id: number }> {
-    return this.userService.deactivateUser(+id);
+    return this.userService.deactivateUser(id);
   }
 }

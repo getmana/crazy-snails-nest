@@ -6,6 +6,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -25,6 +26,7 @@ import { ZodValidationPipe } from 'src/pipes';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { type UserStrategyPayload } from '../auth/strategies';
 import { zodToApiSchema } from 'src/utils';
+import { OptionalJwtGuard } from 'src/guards';
 
 @ApiTags('albums')
 @Controller('albums')
@@ -69,12 +71,21 @@ export class AlbumsController {
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get a single album by ID' })
+  @UseGuards(OptionalJwtGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get a single album by ID',
+    description:
+      'Auth is optional. Unauthenticated requests return only published albums. Authenticated owners also see their own unpublished drafts.',
+  })
   @ApiParam({ name: 'id', type: 'number' })
   @ApiResponse({ status: 200, description: 'Album found' })
   @ApiResponse({ status: 404, description: 'Album not found' })
-  findOne(@Param('id') id: string) {
-    return this.albumsService.findOne(+id);
+  async findOne(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserStrategyPayload | null,
+  ) {
+    return await this.albumsService.findOne(id, user?.id ?? null);
   }
 
   @Delete(':id')
@@ -82,7 +93,7 @@ export class AlbumsController {
   @ApiParam({ name: 'id', type: 'number' })
   @ApiResponse({ status: 200, description: 'Album deleted' })
   @ApiResponse({ status: 404, description: 'Album not found' })
-  remove(@Param('id') id: string) {
-    return this.albumsService.remove(+id);
+  remove(@Param('id', ParseIntPipe) id: number) {
+    return this.albumsService.remove(id);
   }
 }

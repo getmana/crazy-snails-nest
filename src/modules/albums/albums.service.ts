@@ -2,6 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateAlbumDto } from './dto/create-album.dto';
 import { ActivityType } from '@prisma/client';
+import { AlbumNotFoundException } from 'src/exceptions/album-not-found.exception';
+import { EntityNotPublished } from 'src/exceptions/entity-not-published.exception';
+import { ErrorCodes } from 'src/constants/error-codes';
 
 @Injectable()
 export class AlbumsService {
@@ -62,8 +65,44 @@ export class AlbumsService {
     return `This action returns all albums`;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} album`;
+  async findOne(id: number, requesterId: number | null) {
+    const album = await this.prisma.album.findUnique({
+      where: {
+        id,
+      },
+      include: {
+        countries: {
+          include: {
+            country: true,
+          },
+          orderBy: { position: 'asc' },
+        },
+        photos: {
+          include: {
+            photo: {
+              include: {
+                notes: {
+                  where: { album_id: id },
+                },
+              },
+            },
+          },
+          orderBy: { position: 'asc' },
+        },
+        activities: true,
+      },
+    });
+
+    if (!album)
+      throw new AlbumNotFoundException(`Album with id ${id} not found`);
+
+    if (!album.is_published && album.user_id !== requesterId)
+      throw new EntityNotPublished(
+        `Album with id ${id} not published`,
+        ErrorCodes.ALBUM_NOT_FOUND,
+      );
+
+    return album;
   }
 
   remove(id: number) {

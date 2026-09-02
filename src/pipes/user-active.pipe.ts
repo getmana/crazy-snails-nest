@@ -3,6 +3,7 @@ import {
   Injectable,
   NotFoundException,
   InternalServerErrorException,
+  BadRequestException,
 } from '@nestjs/common';
 import { ErrorCodes } from 'src/constants/error-codes';
 import { PinoLogger, InjectPinoLogger } from 'pino-nestjs';
@@ -18,6 +19,11 @@ export class UserActivePipe implements PipeTransform {
 
   async transform(value: string) {
     const id = +value;
+
+    if (isNaN(id)) {
+      throw new BadRequestException('id must be a number');
+    }
+
     try {
       const user = await this.userService.findActiveUser(id);
       return user.id;
