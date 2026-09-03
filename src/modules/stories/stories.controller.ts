@@ -6,6 +6,7 @@ import {
   Get,
   Param,
   ParseIntPipe,
+  Patch,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
@@ -26,6 +27,10 @@ import {
 } from '@nestjs/swagger';
 import { zodToApiSchema } from 'src/utils';
 import { OptionalJwtGuard } from 'src/guards';
+import {
+  type UpdateStoryPayload,
+  UpdateStorySchema,
+} from './dto/update-story.dto';
 
 @ApiTags('stories')
 @Controller('stories')
@@ -70,5 +75,20 @@ export class StoriesController {
     @CurrentUser() user: UserStrategyPayload | null,
   ) {
     return await this.storiesService.findOne(id, user?.id ?? null);
+  }
+
+  @Patch(':id')
+  @UseGuards(AuthGuard('jwt'))
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body(new ZodValidationPipe(UpdateStorySchema))
+    updateStoryDto: UpdateStoryPayload,
+    @CurrentUser() user: UserStrategyPayload,
+  ) {
+    return await this.storiesService.update({
+      id,
+      ...updateStoryDto,
+      userId: user.id,
+    });
   }
 }

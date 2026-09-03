@@ -9,7 +9,10 @@ import { FILE_UPLOAD_URL } from './constants';
 import { Logger } from 'pino-nestjs';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
-import { NotFoundDomainFilter } from './filters/not-found-domain.filter';
+import {
+  ForbiddenDomainFilter,
+  NotFoundDomainFilter,
+} from './filters/domain-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -25,6 +28,7 @@ async function bootstrap() {
     new FileWriteFilter(),
     new PrismaExceptionFilter(),
     new NotFoundDomainFilter(),
+    new ForbiddenDomainFilter(),
   );
 
   const config = new DocumentBuilder()
