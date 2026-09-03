@@ -19,7 +19,7 @@ async function bootstrap() {
 
   app.useLogger(app.get(Logger));
 
-  app.useStaticAssets(join(__dirname, '..', FILE_UPLOAD_URL), {
+  app.useStaticAssets(join(process.cwd(), FILE_UPLOAD_URL), {
     prefix: `/${FILE_UPLOAD_URL}/`,
   });
 
