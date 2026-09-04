@@ -19,7 +19,7 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { FileUploadInterceptor } from 'src/interceptors';
 import { PhotosService } from './photos.service';
-import { MAX_IMAGE_SIZE } from 'src/constants';
+import { ALLOWED_IMAGE_TYPES_REGEXP, MAX_IMAGE_SIZE } from 'src/constants';
 import { CurrentUser } from 'src/decorators/current-user.decorator';
 import { type UserStrategyPayload } from '../auth/strategies';
 import { CreatePhotoDto } from './dto/create-photo.dto';
@@ -55,7 +55,7 @@ export class PhotosController {
       new ParseFilePipe({
         validators: [
           new MaxFileSizeValidator({ maxSize: MAX_IMAGE_SIZE }),
-          new FileTypeValidator({ fileType: /(jpg|jpeg|png)/ }),
+          new FileTypeValidator({ fileType: ALLOWED_IMAGE_TYPES_REGEXP }),
         ],
       }),
     )

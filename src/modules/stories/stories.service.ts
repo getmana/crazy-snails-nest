@@ -21,6 +21,7 @@ const storyPhotoIncludes = {
     include: { photo: true },
     orderBy: { position: 'asc' as const },
   },
+  photo: true,
 } satisfies Prisma.StoryInclude;
 
 @Injectable()
