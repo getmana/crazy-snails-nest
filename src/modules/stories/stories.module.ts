@@ -5,5 +5,6 @@ import { StoriesService } from './stories.service';
 @Module({
   controllers: [StoriesController],
   providers: [StoriesService],
+  exports: [StoriesService],
 })
 export class StoriesModule {}

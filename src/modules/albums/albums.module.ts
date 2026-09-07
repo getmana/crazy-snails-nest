@@ -7,5 +7,6 @@ import { CountriesModule } from '../countries/countries.module';
   controllers: [AlbumsController],
   providers: [AlbumsService],
   imports: [CountriesModule],
+  exports: [AlbumsService],
 })
 export class AlbumsModule {}

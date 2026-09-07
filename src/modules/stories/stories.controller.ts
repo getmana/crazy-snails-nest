@@ -59,6 +59,22 @@ export class StoriesController {
     });
   }
 
+  @Get()
+  @ApiOperation({ summary: 'List all published stories' })
+  @ApiResponse({ status: 200, description: 'Array of stories' })
+  async findAll() {
+    return await this.storiesService.findMany({ publishedOnly: true });
+  }
+
+  @Get('/mine')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List all owned stories' })
+  @ApiResponse({ status: 200, description: 'Array of stories' })
+  async findOwnStories(@CurrentUser() user: UserStrategyPayload) {
+    return await this.storiesService.findMany({ userId: user.id });
+  }
+
   @Get(':id')
   @UseGuards(OptionalJwtGuard)
   @ApiBearerAuth()

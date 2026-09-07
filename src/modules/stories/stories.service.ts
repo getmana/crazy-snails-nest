@@ -68,6 +68,23 @@ export class StoriesService {
     return story;
   }
 
+  async findMany({
+    userId,
+    publishedOnly,
+  }: {
+    userId?: number;
+    publishedOnly?: boolean;
+  }) {
+    const stories = await this.prisma.story.findMany({
+      where: {
+        ...(userId !== undefined && { user_id: userId }),
+        ...(publishedOnly !== undefined && { is_published: publishedOnly }),
+      },
+    });
+
+    return stories;
+  }
+
   async update(updateStoryDto: UpdateStoryDto) {
     const {
       id,

@@ -57,10 +57,19 @@ export class AlbumsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List all albums' })
+  @ApiOperation({ summary: 'List all published albums' })
   @ApiResponse({ status: 200, description: 'Array of albums' })
-  findAll() {
-    return this.albumsService.findAll();
+  async findAll() {
+    return await this.albumsService.findMany({ publishedOnly: true });
+  }
+
+  @Get('/mine')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'List all owned albums' })
+  @ApiResponse({ status: 200, description: 'Array of albums' })
+  async findOwnAlbums(@CurrentUser() user: UserStrategyPayload) {
+    return await this.albumsService.findMany({ userId: user.id });
   }
 
   @Get('/activity-types')

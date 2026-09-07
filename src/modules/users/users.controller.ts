@@ -36,11 +36,17 @@ import { Roles } from 'src/decorators/roles.decorator';
 import { AuthGuard } from '@nestjs/passport';
 import { SelfOrAdminGuard } from 'src/guards';
 import { zodToApiSchema } from 'src/utils';
+import { AlbumsService } from 'src/modules/albums/albums.service';
+import { StoriesService } from '../stories/stories.service';
 
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
-  constructor(private readonly userService: UsersService) {}
+  constructor(
+    private readonly userService: UsersService,
+    private readonly albumsService: AlbumsService,
+    private readonly storiesService: StoriesService,
+  ) {}
 
   @Post()
   @UsePipes(
@@ -74,6 +80,28 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'User not found or inactive' })
   findOne(@Param('id', UserActivePipe) id: number) {
     return this.userService.findOne(id);
+  }
+
+  @Get(':id/albums')
+  @ApiOperation({ summary: 'Get published albums of a single user' })
+  @ApiParam({ name: 'id', type: 'number' })
+  @ApiResponse({ status: 200, description: 'Albums found' })
+  async findUserAlbums(@Param('id', UserActivePipe) id: number) {
+    return await this.albumsService.findMany({
+      publishedOnly: true,
+      userId: id,
+    });
+  }
+
+  @Get(':id/stories')
+  @ApiOperation({ summary: 'Get published stories of a single user' })
+  @ApiParam({ name: 'id', type: 'number' })
+  @ApiResponse({ status: 200, description: 'Stories found' })
+  async findUserStories(@Param('id', UserActivePipe) id: number) {
+    return await this.storiesService.findMany({
+      publishedOnly: true,
+      userId: id,
+    });
   }
 
   @Patch(':id')

@@ -61,8 +61,21 @@ export class AlbumsService {
     return { id: album.id };
   }
 
-  findAll() {
-    return `This action returns all albums`;
+  async findMany({
+    userId,
+    publishedOnly,
+  }: {
+    userId?: number;
+    publishedOnly?: boolean;
+  }) {
+    const albums = await this.prisma.album.findMany({
+      where: {
+        ...(userId !== undefined && { user_id: userId }),
+        ...(publishedOnly !== undefined && { is_published: publishedOnly }),
+      },
+    });
+
+    return albums;
   }
 
   async findOne(id: number, requesterId: number | null) {
