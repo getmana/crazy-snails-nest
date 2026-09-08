@@ -6,7 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { ErrorCodes } from 'src/constants/error-codes';
-import { ROLES_KEY } from 'src/decorators/roles.decorator';
+import { ROLES_KEY } from 'src/decorators';
 import { UserStrategyPayload } from 'src/modules/auth/strategies';
 
 interface RequestWithUser extends Request {

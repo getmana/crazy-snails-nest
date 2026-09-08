@@ -7,6 +7,7 @@ import {
   Param,
   ParseIntPipe,
   Patch,
+  Query,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
@@ -14,7 +15,11 @@ import {
   type CreateStoryPayload,
 } from './dto/create-story.dto';
 import { ZodValidationPipe } from 'src/pipes';
-import { CurrentUser } from 'src/decorators/current-user.decorator';
+import {
+  ApiPaginatedResponse,
+  CurrentUser,
+  ApiPaginationQuery,
+} from 'src/decorators';
 import { type UserStrategyPayload } from '../auth/strategies';
 import { StoriesService } from './stories.service';
 import {
@@ -31,6 +36,7 @@ import {
   type UpdateStoryPayload,
   UpdateStorySchema,
 } from './dto/update-story.dto';
+import { type PaginationPayload, PaginationSchema } from 'src/dto';
 
 @ApiTags('stories')
 @Controller('stories')
@@ -61,18 +67,33 @@ export class StoriesController {
 
   @Get()
   @ApiOperation({ summary: 'List all published stories' })
-  @ApiResponse({ status: 200, description: 'Array of stories' })
-  async findAll() {
-    return await this.storiesService.findMany({ publishedOnly: true });
+  @ApiPaginationQuery()
+  @ApiPaginatedResponse('Paginated stories')
+  async findAll(
+    @Query(new ZodValidationPipe(PaginationSchema))
+    paginationDto: PaginationPayload,
+  ) {
+    return await this.storiesService.findMany({
+      publishedOnly: true,
+      ...paginationDto,
+    });
   }
 
   @Get('/mine')
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'List all owned stories' })
-  @ApiResponse({ status: 200, description: 'Array of stories' })
-  async findOwnStories(@CurrentUser() user: UserStrategyPayload) {
-    return await this.storiesService.findMany({ userId: user.id });
+  @ApiPaginationQuery()
+  @ApiPaginatedResponse('Paginated own stories')
+  async findOwnStories(
+    @Query(new ZodValidationPipe(PaginationSchema))
+    paginationDto: PaginationPayload,
+    @CurrentUser() user: UserStrategyPayload,
+  ) {
+    return await this.storiesService.findMany({
+      userId: user.id,
+      ...paginationDto,
+    });
   }
 
   @Get(':id')

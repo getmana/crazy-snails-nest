@@ -7,6 +7,7 @@ import {
   Delete,
   UseGuards,
   ParseIntPipe,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -23,10 +24,15 @@ import {
 } from './dto/create-album.dto';
 import { AuthGuard } from '@nestjs/passport';
 import { ZodValidationPipe } from 'src/pipes';
-import { CurrentUser } from 'src/decorators/current-user.decorator';
+import {
+  ApiPaginatedResponse,
+  CurrentUser,
+  ApiPaginationQuery,
+} from 'src/decorators';
 import { type UserStrategyPayload } from '../auth/strategies';
 import { zodToApiSchema } from 'src/utils';
 import { OptionalJwtGuard } from 'src/guards';
+import { type PaginationPayload, PaginationSchema } from 'src/dto';
 
 @ApiTags('albums')
 @Controller('albums')
@@ -58,18 +64,33 @@ export class AlbumsController {
 
   @Get()
   @ApiOperation({ summary: 'List all published albums' })
-  @ApiResponse({ status: 200, description: 'Array of albums' })
-  async findAll() {
-    return await this.albumsService.findMany({ publishedOnly: true });
+  @ApiPaginationQuery()
+  @ApiPaginatedResponse('Paginated albums')
+  async findAll(
+    @Query(new ZodValidationPipe(PaginationSchema))
+    paginationDto: PaginationPayload,
+  ) {
+    return await this.albumsService.findMany({
+      publishedOnly: true,
+      ...paginationDto,
+    });
   }
 
   @Get('/mine')
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
   @ApiOperation({ summary: 'List all owned albums' })
-  @ApiResponse({ status: 200, description: 'Array of albums' })
-  async findOwnAlbums(@CurrentUser() user: UserStrategyPayload) {
-    return await this.albumsService.findMany({ userId: user.id });
+  @ApiPaginationQuery()
+  @ApiPaginatedResponse('Paginated own albums')
+  async findOwnAlbums(
+    @Query(new ZodValidationPipe(PaginationSchema))
+    paginationDto: PaginationPayload,
+    @CurrentUser() user: UserStrategyPayload,
+  ) {
+    return await this.albumsService.findMany({
+      userId: user.id,
+      ...paginationDto,
+    });
   }
 
   @Get('/activity-types')

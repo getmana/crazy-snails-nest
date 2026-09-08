@@ -7,6 +7,7 @@ import { ErrorCodes } from 'src/constants/error-codes';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception';
 import { Prisma } from '@prisma/client';
+import { buildPaginationArgs, findManyPaginated } from 'src/utils';
 
 const storyPhotoIncludes = {
   carousel_stories: {
@@ -71,18 +72,25 @@ export class StoriesService {
   async findMany({
     userId,
     publishedOnly,
+    cursor,
+    limit,
   }: {
     userId?: number;
     publishedOnly?: boolean;
+    cursor?: number;
+    limit: number;
   }) {
-    const stories = await this.prisma.story.findMany({
-      where: {
-        ...(userId !== undefined && { user_id: userId }),
-        ...(publishedOnly !== undefined && { is_published: publishedOnly }),
-      },
-    });
-
-    return stories;
+    return findManyPaginated(
+      () =>
+        this.prisma.story.findMany({
+          where: {
+            ...(userId !== undefined && { user_id: userId }),
+            ...(publishedOnly !== undefined && { is_published: publishedOnly }),
+          },
+          ...buildPaginationArgs(cursor, limit),
+        }),
+      limit,
+    );
   }
 
   async update(updateStoryDto: UpdateStoryDto) {

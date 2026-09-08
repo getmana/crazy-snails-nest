@@ -5,6 +5,7 @@ import { ActivityType } from '@prisma/client';
 import { AlbumNotFoundException } from 'src/exceptions/album-not-found.exception';
 import { EntityNotPublished } from 'src/exceptions/entity-not-published.exception';
 import { ErrorCodes } from 'src/constants/error-codes';
+import { buildPaginationArgs, findManyPaginated } from 'src/utils';
 
 @Injectable()
 export class AlbumsService {
@@ -64,18 +65,25 @@ export class AlbumsService {
   async findMany({
     userId,
     publishedOnly,
+    cursor,
+    limit,
   }: {
     userId?: number;
     publishedOnly?: boolean;
+    cursor?: number;
+    limit: number;
   }) {
-    const albums = await this.prisma.album.findMany({
-      where: {
-        ...(userId !== undefined && { user_id: userId }),
-        ...(publishedOnly !== undefined && { is_published: publishedOnly }),
-      },
-    });
-
-    return albums;
+    return findManyPaginated(
+      () =>
+        this.prisma.album.findMany({
+          where: {
+            ...(userId !== undefined && { user_id: userId }),
+            ...(publishedOnly !== undefined && { is_published: publishedOnly }),
+          },
+          ...buildPaginationArgs(cursor, limit),
+        }),
+      limit,
+    );
   }
 
   async findOne(id: number, requesterId: number | null) {

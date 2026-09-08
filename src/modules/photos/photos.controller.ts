@@ -20,7 +20,7 @@ import { AuthGuard } from '@nestjs/passport';
 import { FileUploadInterceptor } from 'src/interceptors';
 import { PhotosService } from './photos.service';
 import { ALLOWED_IMAGE_TYPES_REGEXP, MAX_IMAGE_SIZE } from 'src/constants';
-import { CurrentUser } from 'src/decorators/current-user.decorator';
+import { CurrentUser } from 'src/decorators';
 import { type UserStrategyPayload } from '../auth/strategies';
 import { CreatePhotoDto } from './dto/create-photo.dto';
 

@@ -8,6 +8,7 @@ import {
   Get,
   Param,
   Patch,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -32,12 +33,17 @@ import {
   ZodValidationPipe,
 } from 'src/pipes';
 import { RolesGuard } from 'src/guards/roles.guard';
-import { Roles } from 'src/decorators/roles.decorator';
+import {
+  ApiPaginatedResponse,
+  Roles,
+  ApiPaginationQuery,
+} from 'src/decorators';
 import { AuthGuard } from '@nestjs/passport';
 import { SelfOrAdminGuard } from 'src/guards';
 import { zodToApiSchema } from 'src/utils';
 import { AlbumsService } from 'src/modules/albums/albums.service';
 import { StoriesService } from '../stories/stories.service';
+import { type PaginationPayload, PaginationSchema } from 'src/dto';
 
 @ApiTags('users')
 @Controller('users')
@@ -85,22 +91,34 @@ export class UsersController {
   @Get(':id/albums')
   @ApiOperation({ summary: 'Get published albums of a single user' })
   @ApiParam({ name: 'id', type: 'number' })
-  @ApiResponse({ status: 200, description: 'Albums found' })
-  async findUserAlbums(@Param('id', UserActivePipe) id: number) {
+  @ApiPaginationQuery()
+  @ApiPaginatedResponse('User albums')
+  async findUserAlbums(
+    @Query(new ZodValidationPipe(PaginationSchema))
+    paginationDto: PaginationPayload,
+    @Param('id', UserActivePipe) id: number,
+  ) {
     return await this.albumsService.findMany({
       publishedOnly: true,
       userId: id,
+      ...paginationDto,
     });
   }
 
   @Get(':id/stories')
   @ApiOperation({ summary: 'Get published stories of a single user' })
   @ApiParam({ name: 'id', type: 'number' })
-  @ApiResponse({ status: 200, description: 'Stories found' })
-  async findUserStories(@Param('id', UserActivePipe) id: number) {
+  @ApiPaginationQuery()
+  @ApiPaginatedResponse('User stories')
+  async findUserStories(
+    @Query(new ZodValidationPipe(PaginationSchema))
+    paginationDto: PaginationPayload,
+    @Param('id', UserActivePipe) id: number,
+  ) {
     return await this.storiesService.findMany({
       publishedOnly: true,
       userId: id,
+      ...paginationDto,
     });
   }
 
