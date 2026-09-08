@@ -13,6 +13,7 @@ import {
   ForbiddenDomainFilter,
   NotFoundDomainFilter,
 } from './filters/domain-exception.filter';
+import { CamelCaseInterceptor } from './interceptors';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -30,6 +31,8 @@ async function bootstrap() {
     new NotFoundDomainFilter(),
     new ForbiddenDomainFilter(),
   );
+
+  app.useGlobalInterceptors(new CamelCaseInterceptor());
 
   const config = new DocumentBuilder()
     .setTitle('Basimtuklet API')

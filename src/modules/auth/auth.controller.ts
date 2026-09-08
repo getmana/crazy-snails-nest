@@ -38,13 +38,13 @@ export class AuthController {
     description: 'Returns access token, refresh token, user id and locale',
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async signin(@Body() signInPayload: SignInPayload, @Res() res: Response) {
+  async signin(@Body() signInPayload: SignInPayload) {
     const user = await this.authService.validateUser(
       signInPayload.email,
       signInPayload.password,
     );
     const result = await this.authService.signin(user);
-    res.send(result);
+    return result;
   }
 
   @Post('refresh')

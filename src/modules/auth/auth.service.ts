@@ -40,7 +40,7 @@ export class AuthService {
       email,
     });
 
-    return { accessToken, refreshToken, id, locale, adminTheme: admin_theme };
+    return { accessToken, refreshToken, id, locale, admin_theme };
   }
 
   async refreshToken(user: UserStrategyPayload) {
