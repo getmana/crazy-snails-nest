@@ -7,7 +7,7 @@ import { ErrorCodes } from 'src/constants/error-codes';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception';
 import { Prisma } from '@prisma/client';
-import { buildPaginationArgs, findManyPaginated } from 'src/utils';
+import { buildPaginationArgs, findManyPaginated, toJsonInput } from 'src/utils';
 
 const storyPhotoIncludes = {
   carousel_stories: {
@@ -133,9 +133,9 @@ export class StoriesService {
         title,
         title_en: titleEn,
         title_uk: titleUk,
-        description,
-        description_en: descriptionEn,
-        description_uk: descriptionUk,
+        description: toJsonInput(description),
+        description_en: toJsonInput(descriptionEn),
+        description_uk: toJsonInput(descriptionUk),
         hero_first: heroFirst,
         is_published: isPublished,
         hero_image_id: heroImageId,

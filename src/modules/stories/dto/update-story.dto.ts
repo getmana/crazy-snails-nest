@@ -1,13 +1,14 @@
 import { z } from 'zod';
+import { TiptapDocumentSchema } from 'src/dto/tiptap.dto';
 
 export const UpdateStorySchema = z
   .object({
     title: z.string().min(1).optional(),
     titleEn: z.string().optional(),
     titleUk: z.string().optional(),
-    description: z.string().optional(),
-    descriptionEn: z.string().optional(),
-    descriptionUk: z.string().optional(),
+    description: TiptapDocumentSchema.optional().nullable(),
+    descriptionEn: TiptapDocumentSchema.optional().nullable(),
+    descriptionUk: TiptapDocumentSchema.optional().nullable(),
     heroFirst: z.boolean().optional(),
     heroImageId: z.number().int().nullable().optional(),
     pairPhotoIds: z.array(z.number().int()).max(2).optional(),
