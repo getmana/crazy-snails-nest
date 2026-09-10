@@ -97,12 +97,12 @@ model Story {
   user_id                Int
   hero_image_id          Int?
   title                  String
-  description            String?
+  description            Json?
   hero_first             Boolean              @default(true)
   created_at             DateTime             @default(now())
   updated_at             DateTime             @updatedAt
-  description_en         String?
-  description_uk         String?
+  description_en         Json?
+  description_uk         Json?
   title_en               String?
   title_uk               String?
   carousel_stories       CarouselStory[]
