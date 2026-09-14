@@ -25,6 +25,10 @@ const storyPhotoIncludes = {
   photo: true,
 } satisfies Prisma.StoryInclude;
 
+const storyPreviewInclude = {
+  photo: true,
+} satisfies Prisma.StoryInclude;
+
 @Injectable()
 export class StoriesService {
   constructor(private prisma: PrismaService) {}
@@ -87,6 +91,7 @@ export class StoriesService {
             ...(userId !== undefined && { user_id: userId }),
             ...(publishedOnly !== undefined && { is_published: publishedOnly }),
           },
+          include: storyPreviewInclude,
           ...buildPaginationArgs(cursor, limit),
         }),
       limit,

@@ -80,6 +80,9 @@ export class AlbumsService {
             ...(userId !== undefined && { user_id: userId }),
             ...(publishedOnly !== undefined && { is_published: publishedOnly }),
           },
+          include: {
+            photo: true,
+          },
           ...buildPaginationArgs(cursor, limit),
         }),
       limit,
