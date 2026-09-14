@@ -38,6 +38,9 @@ model Album {
   description_uk    String?
   title_en          String?
   title_uk          String?
+  subtitle          String?
+  subtitle_en       String?
+  subtitle_uk       String?
   is_published      Boolean        @default(false)
   user              User           @relation(fields: [user_id], references: [id])
   photo             Photo?          @relation(fields: [preview_image_id], references: [id])
@@ -105,6 +108,9 @@ model Story {
   description_uk         Json?
   title_en               String?
   title_uk               String?
+  subtitle               String?
+  subtitle_en            String?
+  subtitle_uk            String?
   carousel_stories       CarouselStory[]
   gallery_image_stories  GalleryImageStory[]
   pair_image_stories     PairImageStory[]
@@ -141,11 +147,14 @@ model PairImageStory {
 }
 
 model CarouselStory {
-  photo_id Int
-  story_id Int
-  position Int
-  photo    Photo @relation(fields: [photo_id], references: [id])
-  story    Story @relation(fields: [story_id], references: [id])
+  photo_id      Int
+  story_id      Int
+  position      Int
+  caption       String?
+  caption_en    String?
+  caption_uk    String?
+  photo         Photo @relation(fields: [photo_id], references: [id])
+  story         Story @relation(fields: [story_id], references: [id])
 
   @@id([photo_id, story_id])
   @@unique([story_id, position])
