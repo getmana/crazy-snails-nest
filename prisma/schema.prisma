@@ -78,7 +78,7 @@ model PhotoAlbum {
   album_id Int
   photo_id Int
   position Int
-  album    Album @relation(fields: [album_id], references: [id])
+  album    Album @relation(fields: [album_id], references: [id], onDelete: Cascade)
   photo    Photo @relation(fields: [photo_id], references: [id])
 
   @@id([album_id, photo_id])
@@ -90,7 +90,7 @@ model PhotoAlbum {
 model AlbumActivity {
   album_id      Int
   activity_type ActivityType
-  album         Album @relation(fields: [album_id], references: [id])
+  album         Album @relation(fields: [album_id], references: [id], onDelete: Cascade)
 
   @@id([album_id, activity_type])
 }
@@ -125,7 +125,7 @@ model GalleryImageStory {
   story_id Int
   position Int
   photo    Photo @relation(fields: [photo_id], references: [id])
-  story    Story @relation(fields: [story_id], references: [id])
+  story    Story @relation(fields: [story_id], references: [id], onDelete: Cascade)
 
   @@id([photo_id, story_id])
   @@unique([story_id, position])
@@ -138,7 +138,7 @@ model PairImageStory {
   story_id Int
   position Int
   photo    Photo @relation(fields: [photo_id], references: [id])
-  story    Story @relation(fields: [story_id], references: [id])
+  story    Story @relation(fields: [story_id], references: [id], onDelete: Cascade)
 
   @@id([photo_id, story_id])
   @@unique([story_id, position])
@@ -154,7 +154,7 @@ model CarouselStory {
   caption_en    String?
   caption_uk    String?
   photo         Photo @relation(fields: [photo_id], references: [id])
-  story         Story @relation(fields: [story_id], references: [id])
+  story         Story @relation(fields: [story_id], references: [id], onDelete: Cascade)
 
   @@id([photo_id, story_id])
   @@unique([story_id, position])
@@ -203,7 +203,7 @@ model CountryAlbum {
   country_id Int
   album_id   Int
   position   Int
-  album      Album   @relation(fields: [album_id], references: [id])
+  album      Album   @relation(fields: [album_id], references: [id], onDelete: Cascade)
   country    Country @relation(fields: [country_id], references: [id])
 
   @@id([country_id, album_id])
