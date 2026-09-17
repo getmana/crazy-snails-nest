@@ -119,6 +119,14 @@ export class StoriesController {
 
   @Patch(':id')
   @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update owned story' })
+  @ApiParam({ name: 'id', type: 'number' })
+  @ApiBody({ schema: zodToApiSchema(UpdateStorySchema) })
+  @ApiResponse({ status: 200, description: 'Story updated' })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Story not found' })
   async update(
     @Param('id', ParseIntPipe) id: number,
     @Body(new ZodValidationPipe(UpdateStorySchema))
