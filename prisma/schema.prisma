@@ -27,15 +27,15 @@ model User {
 model Album {
   id                Int            @id @default(autoincrement())
   title             String
-  description       String
+  description       Json?
   start_date        DateTime
   end_date          DateTime
   created_at        DateTime       @default(now())
   updated_at        DateTime       @updatedAt
   preview_image_id  Int?
   user_id           Int
-  description_en    String?
-  description_uk    String?
+  description_en    Json?
+  description_uk    Json?
   title_en          String?
   title_uk          String?
   subtitle          String?
@@ -164,19 +164,19 @@ model CarouselStory {
 
 model Note {
   id             Int      @id @default(autoincrement())
-  title          String
-  description    String
+  title          String?
+  description    Json
   photo_id       Int
   album_id       Int
   created_at     DateTime @default(now())
   updated_at     DateTime @updatedAt
   user_id        Int
   country_id     Int?
-  description_en String?
-  description_uk String?
+  description_en Json?
+  description_uk Json?
   title_en       String?
   title_uk       String?
-  date           DateTime
+  date           DateTime?
   album          Album    @relation(fields: [album_id], references: [id])
   country        Country? @relation(fields: [country_id], references: [id])
   photo          Photo    @relation(fields: [photo_id], references: [id])
