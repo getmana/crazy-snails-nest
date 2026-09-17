@@ -8,6 +8,9 @@ import {
   ParseIntPipe,
   Patch,
   Query,
+  Delete,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import {
@@ -127,5 +130,21 @@ export class StoriesController {
       ...updateStoryDto,
       userId: user.id,
     });
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a story (own or by admin)' })
+  @ApiParam({ name: 'id', type: 'number' })
+  @ApiResponse({ status: 204, description: 'Story deleted' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Story not found' })
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserStrategyPayload,
+  ) {
+    await this.storiesService.remove(id, user);
   }
 }

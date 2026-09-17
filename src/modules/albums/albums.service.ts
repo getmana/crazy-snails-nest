@@ -6,6 +6,7 @@ import { AlbumNotFoundException } from 'src/exceptions/album-not-found.exception
 import { EntityNotPublished } from 'src/exceptions/entity-not-published.exception';
 import { ErrorCodes } from 'src/constants/error-codes';
 import { buildPaginationArgs, findManyPaginated } from 'src/utils';
+import { UserStrategyPayload } from '../auth/strategies';
 
 @Injectable()
 export class AlbumsService {
@@ -79,6 +80,7 @@ export class AlbumsService {
           where: {
             ...(userId !== undefined && { user_id: userId }),
             ...(publishedOnly !== undefined && { is_published: publishedOnly }),
+            user: { isActive: true },
           },
           include: {
             photo: true,
@@ -129,8 +131,10 @@ export class AlbumsService {
     return album;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} album`;
+  async remove(id: number, user: UserStrategyPayload) {
+    await this.prisma.album.delete({
+      where: { id, ...(user.role !== 'admin' && { user_id: user.id }) },
+    });
   }
 
   readActivityType() {

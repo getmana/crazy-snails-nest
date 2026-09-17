@@ -8,6 +8,8 @@ import {
   UseGuards,
   ParseIntPipe,
   Query,
+  HttpCode,
+  HttpStatus,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -119,11 +121,18 @@ export class AlbumsController {
   }
 
   @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete an album by ID' })
   @ApiParam({ name: 'id', type: 'number' })
-  @ApiResponse({ status: 200, description: 'Album deleted' })
+  @ApiResponse({ status: 204, description: 'Album deleted' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'Album not found' })
-  remove(@Param('id', ParseIntPipe) id: number) {
-    return this.albumsService.remove(id);
+  async remove(
+    @Param('id', ParseIntPipe) id: number,
+    @CurrentUser() user: UserStrategyPayload,
+  ) {
+    await this.albumsService.remove(id, user);
   }
 }

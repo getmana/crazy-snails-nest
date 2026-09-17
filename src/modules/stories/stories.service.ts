@@ -8,6 +8,7 @@ import { UpdateStoryDto } from './dto/update-story.dto';
 import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception';
 import { Prisma } from '@prisma/client';
 import { buildPaginationArgs, findManyPaginated, toJsonInput } from 'src/utils';
+import { UserStrategyPayload } from '../auth/strategies';
 
 const storyPhotoIncludes = {
   carousel_stories: {
@@ -90,6 +91,7 @@ export class StoriesService {
           where: {
             ...(userId !== undefined && { user_id: userId }),
             ...(publishedOnly !== undefined && { is_published: publishedOnly }),
+            user: { isActive: true },
           },
           include: storyPreviewInclude,
           ...buildPaginationArgs(cursor, limit),
@@ -105,6 +107,9 @@ export class StoriesService {
       title,
       titleEn,
       titleUk,
+      subtitle,
+      subtitleEn,
+      subtitleUk,
       description,
       descriptionEn,
       descriptionUk,
@@ -112,9 +117,11 @@ export class StoriesService {
       heroImageId,
       pairPhotoIds,
       galleryPhotoIds,
-      carouselPhotoIds,
+      carouselPhotos,
       isPublished,
     } = updateStoryDto;
+
+    const carouselPhotoIds = carouselPhotos?.map(({ photoId }) => photoId);
 
     const photoIds = [
       ...(heroImageId !== null && heroImageId !== undefined
@@ -141,6 +148,9 @@ export class StoriesService {
         description: toJsonInput(description),
         description_en: toJsonInput(descriptionEn),
         description_uk: toJsonInput(descriptionUk),
+        subtitle,
+        subtitle_en: subtitleEn,
+        subtitle_uk: subtitleUk,
         hero_first: heroFirst,
         is_published: isPublished,
         hero_image_id: heroImageId,
@@ -166,15 +176,20 @@ export class StoriesService {
             })),
           },
         }),
-        ...(carouselPhotoIds !== undefined && {
+        ...(carouselPhotos !== undefined && {
           carousel_stories: {
             deleteMany: { story_id: id },
-            create: carouselPhotoIds.map((photoId, position) => ({
-              position,
-              photo: {
-                connect: { id: photoId },
-              },
-            })),
+            create: carouselPhotos.map(
+              ({ photoId, caption, captionEn, captionUk }, position) => ({
+                position,
+                photo: {
+                  connect: { id: photoId },
+                },
+                caption,
+                caption_en: captionEn,
+                caption_uk: captionUk,
+              }),
+            ),
           },
         }),
       },
@@ -182,5 +197,11 @@ export class StoriesService {
     });
 
     return story;
+  }
+
+  async remove(id: number, user: UserStrategyPayload) {
+    await this.prisma.story.delete({
+      where: { id, ...(user.role !== 'admin' && { user_id: user.id }) },
+    });
   }
 }
