@@ -7,9 +7,6 @@ export const CreateAlbumSchema = z
     title: z.string().min(1, 'Title must be at least 1 character'),
     titleEn: z.string().optional(),
     titleUk: z.string().optional(),
-    description: z.string().min(1, 'Description must be at least 1 character'),
-    descriptionEn: z.string().optional(),
-    descriptionUk: z.string().optional(),
     countries: z
       .array(z.number())
       .min(1, 'At least one country is required')
@@ -22,9 +19,6 @@ export const CreateAlbumSchema = z
   })
   .refine((data) => data.titleEn || data.titleUk, {
     message: 'At least one of titleEn or titleUk must be provided',
-  })
-  .refine((data) => data.descriptionEn || data.descriptionUk, {
-    message: 'At least one of descriptionEn or descriptionUk must be provided',
   });
 
 export type CreateAlbumPayload = z.infer<typeof CreateAlbumSchema>;

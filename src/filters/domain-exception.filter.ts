@@ -4,6 +4,7 @@ import { EntityNotPublished } from 'src/exceptions/entity-not-published.exceptio
 import { StoryNotFoundException } from 'src/exceptions/story-not-found.exception';
 import { Response } from 'express';
 import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception';
+import { PreviewPhotoInvalidException } from 'src/exceptions/preview-photo-invalid.exception';
 
 @Catch(AlbumNotFoundException, StoryNotFoundException, EntityNotPublished)
 export class NotFoundDomainFilter implements ExceptionFilter {
@@ -22,6 +23,19 @@ export class ForbiddenDomainFilter implements ExceptionFilter {
     host: ArgumentsHost,
   ) {
     host.switchToHttp().getResponse<Response>().status(403).json({
+      message,
+      code,
+    });
+  }
+}
+
+@Catch(PreviewPhotoInvalidException)
+export class UnprocessableEntityDomainFilter implements ExceptionFilter {
+  catch(
+    { code, message }: { code: string; message: string },
+    host: ArgumentsHost,
+  ) {
+    host.switchToHttp().getResponse<Response>().status(422).json({
       message,
       code,
     });

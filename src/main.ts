@@ -12,6 +12,7 @@ import { apiReference } from '@scalar/nestjs-api-reference';
 import {
   ForbiddenDomainFilter,
   NotFoundDomainFilter,
+  UnprocessableEntityDomainFilter,
 } from './filters/domain-exception.filter';
 import { CamelCaseInterceptor } from './interceptors';
 
@@ -30,6 +31,7 @@ async function bootstrap() {
     new PrismaExceptionFilter(),
     new NotFoundDomainFilter(),
     new ForbiddenDomainFilter(),
+    new UnprocessableEntityDomainFilter(),
   );
 
   app.useGlobalInterceptors(new CamelCaseInterceptor());

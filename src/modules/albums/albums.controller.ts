@@ -10,6 +10,7 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  Patch,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -35,6 +36,10 @@ import { type UserStrategyPayload } from '../auth/strategies';
 import { zodToApiSchema } from 'src/utils';
 import { OptionalJwtGuard } from 'src/guards';
 import { type PaginationPayload, PaginationSchema } from 'src/dto';
+import {
+  type UpdateAlbumPayload,
+  UpdateAlbumSchema,
+} from './dto/update-album.dto';
 
 @ApiTags('albums')
 @Controller('albums')
@@ -118,6 +123,29 @@ export class AlbumsController {
     @CurrentUser() user: UserStrategyPayload | null,
   ) {
     return await this.albumsService.findOne(id, user?.id ?? null);
+  }
+
+  @Patch(':id')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Update owned Album' })
+  @ApiParam({ name: 'id', type: 'number' })
+  @ApiBody({ schema: zodToApiSchema(UpdateAlbumSchema) })
+  @ApiResponse({ status: 200, description: 'Album updated' })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Album not found' })
+  async update(
+    @Param('id', ParseIntPipe) id: number,
+    @Body(new ZodValidationPipe(UpdateAlbumSchema))
+    updateAlbumDto: UpdateAlbumPayload,
+    @CurrentUser() user: UserStrategyPayload,
+  ) {
+    return await this.albumsService.update({
+      id,
+      ...updateAlbumDto,
+      userId: user.id,
+    });
   }
 
   @Delete(':id')
