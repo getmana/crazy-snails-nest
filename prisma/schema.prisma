@@ -177,7 +177,7 @@ model Note {
   title_en       String?
   title_uk       String?
   date           DateTime?
-  album          Album    @relation(fields: [album_id], references: [id])
+  album          Album    @relation(fields: [album_id], references: [id], onDelete: Cascade)
   country        Country? @relation(fields: [country_id], references: [id])
   photo          Photo    @relation(fields: [photo_id], references: [id])
   user           User     @relation(fields: [user_id], references: [id])
