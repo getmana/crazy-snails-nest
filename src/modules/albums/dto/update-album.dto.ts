@@ -3,18 +3,6 @@ import { TiptapDocumentSchema } from 'src/dto/tiptap.dto';
 import { prismaEnumValues } from 'src/utils';
 import { ActivityType } from '@prisma/client';
 
-// Leave it here for a later use when creating notes
-export const Note = z.object({
-  country: z.number().optional(),
-  title: z.string().min(1).optional(),
-  titleEn: z.string().optional(),
-  titleUk: z.string().optional(),
-  description: TiptapDocumentSchema,
-  descriptionEn: TiptapDocumentSchema.optional().nullable(),
-  descriptionUk: TiptapDocumentSchema.optional().nullable(),
-  date: z.coerce.date().optional(),
-});
-
 export const UpdateAlbumSchema = z
   .object({
     title: z.string().min(1).optional(),

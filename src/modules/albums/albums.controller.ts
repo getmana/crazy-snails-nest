@@ -11,6 +11,7 @@ import {
   HttpCode,
   HttpStatus,
   Patch,
+  Put,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -40,11 +41,19 @@ import {
   type UpdateAlbumPayload,
   UpdateAlbumSchema,
 } from './dto/update-album.dto';
+import { NotesService } from './notes.service';
+import {
+  UpdateNoteSchema,
+  type UpdateNotePayload,
+} from './dto/update-note.dto';
 
 @ApiTags('albums')
 @Controller('albums')
 export class AlbumsController {
-  constructor(private readonly albumsService: AlbumsService) {}
+  constructor(
+    private readonly albumsService: AlbumsService,
+    private readonly notesService: NotesService,
+  ) {}
 
   @Post()
   @UseGuards(AuthGuard('jwt'))
@@ -144,6 +153,58 @@ export class AlbumsController {
     return await this.albumsService.update({
       id,
       ...updateAlbumDto,
+      userId: user.id,
+    });
+  }
+
+  @Put(':id/photos/:photoId/note')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Create/update owned Note',
+    description:
+      'Full replacement. Re-send all fields on every call; omitted optional fields are cleared.',
+  })
+  @ApiParam({ name: 'id', type: 'number' })
+  @ApiParam({ name: 'photoId', type: 'number' })
+  @ApiBody({ schema: zodToApiSchema(UpdateNoteSchema) })
+  @ApiResponse({ status: 200, description: 'Note created/updated' })
+  @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  async updateNote(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('photoId', ParseIntPipe) photoId: number,
+    @Body(new ZodValidationPipe(UpdateNoteSchema))
+    updateNoteDto: UpdateNotePayload,
+    @CurrentUser() user: UserStrategyPayload,
+  ) {
+    return await this.notesService.update({
+      ...updateNoteDto,
+      albumId: id,
+      photoId,
+      userId: user.id,
+    });
+  }
+
+  @Delete(':id/photos/:photoId/note')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Delete a note by album ID & photo ID' })
+  @ApiParam({ name: 'id', type: 'number' })
+  @ApiParam({ name: 'photoId', type: 'number' })
+  @ApiResponse({ status: 204, description: 'Note deleted' })
+  @ApiResponse({ status: 401, description: 'Unauthorized' })
+  @ApiResponse({ status: 404, description: 'Note not found' })
+  async deleteNote(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('photoId', ParseIntPipe) photoId: number,
+    @CurrentUser() user: UserStrategyPayload,
+  ) {
+    await this.notesService.remove({
+      albumId: id,
+      photoId,
       userId: user.id,
     });
   }
