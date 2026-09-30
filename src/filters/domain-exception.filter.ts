@@ -5,8 +5,14 @@ import { StoryNotFoundException } from 'src/exceptions/story-not-found.exception
 import { Response } from 'express';
 import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception';
 import { PreviewPhotoInvalidException } from 'src/exceptions/preview-photo-invalid.exception';
+import { NoteNotFoundException } from 'src/exceptions';
 
-@Catch(AlbumNotFoundException, StoryNotFoundException, EntityNotPublished)
+@Catch(
+  AlbumNotFoundException,
+  StoryNotFoundException,
+  EntityNotPublished,
+  NoteNotFoundException,
+)
 export class NotFoundDomainFilter implements ExceptionFilter {
   catch(exception: { code: string }, host: ArgumentsHost) {
     host.switchToHttp().getResponse<Response>().status(404).json({

@@ -8,3 +8,4 @@ export {
 } from './paginate';
 export { camelcaseKeys } from './camelcaseKeys';
 export { toJsonInput } from './toJsonInput';
+export { type OptionalProperty } from './types';

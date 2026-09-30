@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { TiptapDocumentSchema } from 'src/dto/tiptap.dto';
+import { type OptionalProperty } from 'src/utils';
 
 export const UpdateNoteSchema = z.object({
   country: z.number().nullable().optional(),
@@ -21,3 +22,5 @@ export type NoteContextDto = {
 };
 
 export type UpdateNoteDto = UpdateNotePayload & NoteContextDto;
+
+export type GetNoteDto = OptionalProperty<NoteContextDto, 'userId'>;

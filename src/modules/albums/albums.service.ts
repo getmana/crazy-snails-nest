@@ -230,7 +230,7 @@ export class AlbumsService {
             },
           }),
           ...(albumPhotoIds !== undefined && {
-            photo_albums: {
+            photos: {
               deleteMany: { album_id: id },
               create: albumPhotoIds.map((photoId, position) => ({
                 position,

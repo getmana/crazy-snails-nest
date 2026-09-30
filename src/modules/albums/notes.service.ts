@@ -1,8 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { type NoteContextDto, UpdateNoteDto } from './dto/update-note.dto';
+import {
+  GetNoteDto,
+  type NoteContextDto,
+  UpdateNoteDto,
+} from './dto/update-note.dto';
 import { toJsonInput } from 'src/utils';
 import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception';
+import { EntityNotPublished } from 'src/exceptions/entity-not-published.exception';
+import { ErrorCodes } from 'src/constants/error-codes';
+import { NoteNotFoundException } from 'src/exceptions';
 
 @Injectable()
 export class NotesService {
@@ -72,6 +79,36 @@ export class NotesService {
         country: true,
       },
     });
+
+    return note;
+  }
+
+  async findOne({ albumId, photoId, userId }: GetNoteDto) {
+    const note = await this.prisma.note.findUnique({
+      where: {
+        photo_id_album_id: { photo_id: photoId, album_id: albumId },
+      },
+      include: {
+        country: true,
+        album: {
+          select: {
+            is_published: true,
+            user_id: true,
+          },
+        },
+      },
+    });
+
+    if (!note)
+      throw new NoteNotFoundException(
+        `Note related to the photo ID ${photoId} and album ID ${albumId} not found`,
+      );
+
+    if (note.album.user_id !== userId && !note.album.is_published)
+      throw new EntityNotPublished(
+        `Note belongs to not published album`,
+        ErrorCodes.ALBUM_NOT_FOUND,
+      );
 
     return note;
   }

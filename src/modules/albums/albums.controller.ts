@@ -157,6 +157,28 @@ export class AlbumsController {
     });
   }
 
+  @Get(':id/photos/:photoId/note')
+  @UseGuards(OptionalJwtGuard)
+  @ApiBearerAuth()
+  @ApiOperation({
+    summary: 'Get a single note by album ID & photo ID',
+    description:
+      'Auth is optional. Unauthenticated requests return only notes in published albums. Authenticated owners also see their own notes in unpublished albums.',
+  })
+  @ApiResponse({ status: 200, description: 'Returns single note' })
+  @ApiResponse({ status: 404, description: 'Note not found' })
+  async findOneNote(
+    @Param('id', ParseIntPipe) id: number,
+    @Param('photoId', ParseIntPipe) photoId: number,
+    @CurrentUser() user: UserStrategyPayload | null,
+  ) {
+    return await this.notesService.findOne({
+      albumId: id,
+      photoId,
+      userId: user?.id ?? undefined,
+    });
+  }
+
   @Put(':id/photos/:photoId/note')
   @UseGuards(AuthGuard('jwt'))
   @ApiBearerAuth()
