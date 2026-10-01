@@ -9,6 +9,7 @@ import {
   Param,
   Patch,
   Query,
+  ParseIntPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -29,7 +30,6 @@ import {
 import {
   UserExistPipe,
   DefaultUserFieldsPipe,
-  UserActivePipe,
   ZodValidationPipe,
 } from 'src/pipes';
 import { RolesGuard } from 'src/guards/roles.guard';
@@ -84,7 +84,7 @@ export class UsersController {
   @ApiParam({ name: 'id', type: 'number' })
   @ApiResponse({ status: 200, description: 'User found' })
   @ApiResponse({ status: 404, description: 'User not found or inactive' })
-  findOne(@Param('id', UserActivePipe) id: number) {
+  findOne(@Param('id', ParseIntPipe) id: number) {
     return this.userService.findOne(id);
   }
 
@@ -96,9 +96,9 @@ export class UsersController {
   async findUserAlbums(
     @Query(new ZodValidationPipe(PaginationSchema))
     paginationDto: PaginationPayload,
-    @Param('id', UserActivePipe) id: number,
+    @Param('id', ParseIntPipe) id: number,
   ) {
-    return await this.albumsService.findMany({
+    return await this.albumsService.findManyByUser({
       publishedOnly: true,
       userId: id,
       ...paginationDto,
@@ -113,9 +113,9 @@ export class UsersController {
   async findUserStories(
     @Query(new ZodValidationPipe(PaginationSchema))
     paginationDto: PaginationPayload,
-    @Param('id', UserActivePipe) id: number,
+    @Param('id', ParseIntPipe) id: number,
   ) {
-    return await this.storiesService.findMany({
+    return await this.storiesService.findManyByUser({
       publishedOnly: true,
       userId: id,
       ...paginationDto,
@@ -133,7 +133,7 @@ export class UsersController {
   @ApiResponse({ status: 401, description: 'Unauthorized' })
   @ApiResponse({ status: 404, description: 'User not found or inactive' })
   update(
-    @Param('id', UserActivePipe) id: number,
+    @Param('id', ParseIntPipe) id: number,
     @Body(new ZodValidationPipe(updateUserSchema), UserExistPipe)
     updateUserDto: UpdateUserDto,
   ) {
@@ -151,7 +151,7 @@ export class UsersController {
   @ApiResponse({ status: 403, description: 'Forbidden — admin role required' })
   @ApiResponse({ status: 404, description: 'User not found or inactive' })
   async deleteUser(
-    @Param('id', UserActivePipe) id: number,
+    @Param('id', ParseIntPipe) id: number,
   ): Promise<{ id: number }> {
     return this.userService.deactivateUser(id);
   }

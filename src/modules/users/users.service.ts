@@ -55,6 +55,7 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({
       where: {
         id,
+        isActive: true,
       },
       select: {
         id: true,
@@ -64,16 +65,10 @@ export class UsersService {
       },
     });
 
-    return user;
-  }
-
-  async findActiveUser(id: number) {
-    const user = await this.prisma.user.findUnique({
-      where: { id, isActive: true },
-    });
     if (!user) {
       throw new ActiveUserNotFoundException(`User with ID ${id} not found`);
     }
+
     return user;
   }
 
@@ -100,7 +95,7 @@ export class UsersService {
 
   async updateUser(id: number, updateUserDto: UpdateUserDto) {
     const user = await this.prisma.user.update({
-      where: { id },
+      where: { id, isActive: true },
       data: {
         username: updateUserDto.username,
         email: updateUserDto.email,
@@ -122,7 +117,7 @@ export class UsersService {
 
   async deactivateUser(id: number) {
     const deactivatedUser = await this.prisma.user.update({
-      where: { id },
+      where: { id, isActive: true },
       data: { isActive: false },
     });
 

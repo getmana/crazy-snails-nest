@@ -9,6 +9,8 @@ import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception
 import { Prisma } from '@prisma/client';
 import { buildPaginationArgs, findManyPaginated, toJsonInput } from 'src/utils';
 import { UserStrategyPayload } from '../auth/strategies';
+import { SharedUsersService } from '../shared/users/shared-users.service';
+import { type GetUserStoriesDto } from 'src/dto';
 
 const storyPhotoIncludes = {
   carousel_stories: {
@@ -32,7 +34,10 @@ const storyPreviewInclude = {
 
 @Injectable()
 export class StoriesService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private userService: SharedUsersService,
+  ) {}
 
   async create(createStoryDto: CreateStoryDto) {
     const { title, titleEn, titleUk, userId } = createStoryDto;
@@ -72,6 +77,11 @@ export class StoriesService {
       );
 
     return story;
+  }
+
+  async findManyByUser(getUserStoriesDto: GetUserStoriesDto) {
+    await this.userService.findActiveUser(getUserStoriesDto.userId);
+    return await this.findMany(getUserStoriesDto);
   }
 
   async findMany({

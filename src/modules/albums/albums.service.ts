@@ -11,6 +11,8 @@ import { UpdateAlbumDto } from './dto/update-album.dto';
 import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception';
 import { PreviewPhotoInvalidException } from 'src/exceptions/preview-photo-invalid.exception';
 import { Prisma } from '@prisma/client';
+import { SharedUsersService } from '../shared/users/shared-users.service';
+import { type GetUserAlbumsDto } from 'src/dto';
 
 const albumDetailIncludes = (albumId: number): Prisma.AlbumInclude => ({
   countries: {
@@ -41,7 +43,10 @@ const albumPreviewInclude = {
 
 @Injectable()
 export class AlbumsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private userService: SharedUsersService,
+  ) {}
 
   async create(createAlbumDto: CreateAlbumDto) {
     const {
@@ -86,6 +91,11 @@ export class AlbumsService {
     });
 
     return { id: album.id };
+  }
+
+  async findManyByUser(getUserAlbumsDto: GetUserAlbumsDto) {
+    await this.userService.findActiveUser(getUserAlbumsDto.userId);
+    return await this.findMany(getUserAlbumsDto);
   }
 
   async findMany({
