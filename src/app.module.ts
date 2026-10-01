@@ -12,7 +12,7 @@ import { StoriesModule } from './modules/stories/stories.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({ isGlobal: true }),
     CountriesModule,
     UsersModule,
     PrismaModule,

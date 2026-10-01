@@ -3,17 +3,21 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { SharedUsersService } from 'src/modules/shared/users/shared-users.service';
 import { ErrorCodes } from 'src/constants/error-codes';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class JwtRefreshStrategy extends PassportStrategy(
   Strategy,
   'jwt-refresh',
 ) {
-  constructor(private userService: SharedUsersService) {
+  constructor(
+    private userService: SharedUsersService,
+    config: ConfigService,
+  ) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: process.env.REFRESH_SECRET || '',
+      secretOrKey: config.getOrThrow<string>('REFRESH_SECRET'),
     });
   }
 

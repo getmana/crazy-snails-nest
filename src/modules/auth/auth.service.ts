@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { SharedUsersService } from 'src/modules/shared/users/shared-users.service';
 import { UserStrategyPayload } from './strategies';
@@ -21,6 +22,7 @@ export class AuthService {
   constructor(
     private userService: SharedUsersService,
     private jwtService: JwtService,
+    private config: ConfigService,
     @InjectPinoLogger(AuthService.name) private logger: PinoLogger,
   ) {}
 
@@ -68,11 +70,11 @@ export class AuthService {
     try {
       const [accessToken, refreshToken] = await Promise.all([
         this.jwtService.signAsync(jwtPayload, {
-          secret: process.env.JWT_SECRET as string,
+          secret: this.config.getOrThrow<string>('JWT_SECRET'),
           expiresIn: '15m',
         }),
         this.jwtService.signAsync(jwtPayload, {
-          secret: process.env.REFRESH_SECRET as string,
+          secret: this.config.getOrThrow<string>('REFRESH_SECRET'),
           expiresIn: '7d',
         }),
       ]);
