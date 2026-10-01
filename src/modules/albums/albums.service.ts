@@ -94,7 +94,7 @@ export class AlbumsService {
   }
 
   async findManyByUser(getUserAlbumsDto: GetUserAlbumsDto) {
-    await this.userService.findActiveUser(getUserAlbumsDto.userId);
+    await this.userService.assertActiveUser(getUserAlbumsDto.userId);
     return await this.findMany(getUserAlbumsDto);
   }
 

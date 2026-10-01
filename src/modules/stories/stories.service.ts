@@ -80,7 +80,7 @@ export class StoriesService {
   }
 
   async findManyByUser(getUserStoriesDto: GetUserStoriesDto) {
-    await this.userService.findActiveUser(getUserStoriesDto.userId);
+    await this.userService.assertActiveUser(getUserStoriesDto.userId);
     return await this.findMany(getUserStoriesDto);
   }
 

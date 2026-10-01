@@ -23,15 +23,14 @@ export class SharedUsersService {
     return user;
   }
 
-  async findActiveUser(id: number) {
+  async assertActiveUser(id: number): Promise<void> {
     const user = await this.prisma.user.findUnique({
       where: { id, isActive: true },
+      select: { id: true },
     });
 
     if (!user) {
       throw new ActiveUserNotFoundException(`User with ID ${id} not found`);
     }
-
-    return user;
   }
 }
