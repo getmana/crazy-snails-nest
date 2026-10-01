@@ -8,7 +8,6 @@ import {
   Get,
   Param,
   Patch,
-  Query,
   ParseIntPipe,
 } from '@nestjs/common';
 import {
@@ -33,26 +32,15 @@ import {
   ZodValidationPipe,
 } from 'src/pipes';
 import { RolesGuard } from 'src/guards/roles.guard';
-import {
-  ApiPaginatedResponse,
-  Roles,
-  ApiPaginationQuery,
-} from 'src/decorators';
+import { Roles } from 'src/decorators';
 import { AuthGuard } from '@nestjs/passport';
 import { SelfOrAdminGuard } from 'src/guards';
 import { zodToApiSchema } from 'src/utils';
-import { AlbumsService } from 'src/modules/albums/albums.service';
-import { StoriesService } from '../stories/stories.service';
-import { type PaginationPayload, PaginationSchema } from 'src/dto';
 
 @ApiTags('users')
 @Controller('users')
 export class UsersController {
-  constructor(
-    private readonly userService: UsersService,
-    private readonly albumsService: AlbumsService,
-    private readonly storiesService: StoriesService,
-  ) {}
+  constructor(private readonly userService: UsersService) {}
 
   @Post()
   @UsePipes(
@@ -86,40 +74,6 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'User not found or inactive' })
   findOne(@Param('id', ParseIntPipe) id: number) {
     return this.userService.findOne(id);
-  }
-
-  @Get(':id/albums')
-  @ApiOperation({ summary: 'Get published albums of a single user' })
-  @ApiParam({ name: 'id', type: 'number' })
-  @ApiPaginationQuery()
-  @ApiPaginatedResponse('User albums')
-  async findUserAlbums(
-    @Query(new ZodValidationPipe(PaginationSchema))
-    paginationDto: PaginationPayload,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    return await this.albumsService.findManyByUser({
-      publishedOnly: true,
-      userId: id,
-      ...paginationDto,
-    });
-  }
-
-  @Get(':id/stories')
-  @ApiOperation({ summary: 'Get published stories of a single user' })
-  @ApiParam({ name: 'id', type: 'number' })
-  @ApiPaginationQuery()
-  @ApiPaginatedResponse('User stories')
-  async findUserStories(
-    @Query(new ZodValidationPipe(PaginationSchema))
-    paginationDto: PaginationPayload,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    return await this.storiesService.findManyByUser({
-      publishedOnly: true,
-      userId: id,
-      ...paginationDto,
-    });
   }
 
   @Patch(':id')
