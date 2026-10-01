@@ -140,9 +140,6 @@ export class UsersController {
     return this.userService.updateUser(id, updateUserDto);
   }
 
-  // TODO
-  // The case to test RolesGuard
-  // Move to SelfOrAdminGuard to allow user delete his account after adding smth role specific
   @Delete(':id')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('admin')

@@ -33,6 +33,4 @@ export class PhotosService {
       thumbnailMdUrl: null,
     };
   }
-
-  delete() {}
 }

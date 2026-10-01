@@ -44,7 +44,6 @@ export class AuthService {
   }
 
   async refreshToken(user: UserStrategyPayload) {
-    console.log('refreshing token===============>');
     const { id, email } = user;
 
     const { accessToken, refreshToken } = await this.getTokens({
