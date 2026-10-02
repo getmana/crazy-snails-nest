@@ -1,9 +1,10 @@
-export class EntityNotPublished extends Error {
+import { DomainException } from './domain.exception';
+
+export class EntityNotPublished extends DomainException {
   constructor(
     message: string,
     readonly code: string,
   ) {
     super(message);
-    this.name = 'EntityNotPublished';
   }
 }
