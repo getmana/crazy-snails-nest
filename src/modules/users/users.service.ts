@@ -12,6 +12,8 @@ export class UsersService {
   async createUser(data: CreateUserDto): Promise<User> {
     const { email, password, username, role, isActive, locale } = data;
 
+    await this.findExistingUser({ email, username });
+
     const hashedPassword = await argon2.hash(password);
     const user = await this.prisma.user.create({
       data: {
@@ -75,13 +77,16 @@ export class UsersService {
   async findExistingUser({
     email,
     username,
+    id,
   }: {
-    email: string;
-    username: string;
-  }) {
+    email?: string;
+    username?: string;
+    id?: number;
+  }): Promise<void> {
     const existingUser = await this.prisma.user.findFirst({
       where: {
         OR: [{ email }, { username }],
+        ...(id !== undefined && { NOT: { id } }),
       },
     });
     if (existingUser) {
@@ -94,13 +99,19 @@ export class UsersService {
   }
 
   async updateUser(id: number, updateUserDto: UpdateUserDto) {
+    const { username, email, adminTheme, locale } = updateUserDto;
+
+    if (username || email) {
+      await this.findExistingUser({ username, email, id });
+    }
+
     const user = await this.prisma.user.update({
       where: { id, isActive: true },
       data: {
-        username: updateUserDto.username,
-        email: updateUserDto.email,
-        admin_theme: updateUserDto.adminTheme,
-        locale: updateUserDto.locale,
+        username,
+        email,
+        admin_theme: adminTheme,
+        locale,
       },
       select: {
         id: true,

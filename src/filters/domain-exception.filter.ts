@@ -8,6 +8,7 @@ import { PreviewPhotoInvalidException } from 'src/exceptions/preview-photo-inval
 import {
   ActiveUserNotFoundException,
   NoteNotFoundException,
+  UserAlreadyExistsException,
 } from 'src/exceptions';
 
 @Catch(
@@ -46,6 +47,19 @@ export class UnprocessableEntityDomainFilter implements ExceptionFilter {
     host: ArgumentsHost,
   ) {
     host.switchToHttp().getResponse<Response>().status(422).json({
+      message,
+      code,
+    });
+  }
+}
+
+@Catch(UserAlreadyExistsException)
+export class ConflictDomainFilter implements ExceptionFilter {
+  catch(
+    { code, message }: { code: string; message: string },
+    host: ArgumentsHost,
+  ) {
+    host.switchToHttp().getResponse<Response>().status(409).json({
       message,
       code,
     });

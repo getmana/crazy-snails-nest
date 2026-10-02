@@ -26,11 +26,7 @@ import {
   type UpdateUserDto,
   updateUserSchema,
 } from './dto/users.dto';
-import {
-  UserExistPipe,
-  DefaultUserFieldsPipe,
-  ZodValidationPipe,
-} from 'src/pipes';
+import { DefaultUserFieldsPipe, ZodValidationPipe } from 'src/pipes';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Roles } from 'src/decorators';
 import { AuthGuard } from '@nestjs/passport';
@@ -43,11 +39,7 @@ export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
   @Post()
-  @UsePipes(
-    new ZodValidationPipe(createUserSchema),
-    UserExistPipe,
-    DefaultUserFieldsPipe,
-  )
+  @UsePipes(new ZodValidationPipe(createUserSchema), DefaultUserFieldsPipe)
   @ApiOperation({ summary: 'Register a new user' })
   @ApiBody({ schema: zodToApiSchema(createUserSchema) })
   @ApiResponse({ status: 201, description: 'User created' })
@@ -88,7 +80,7 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'User not found or inactive' })
   update(
     @Param('id', ParseIntPipe) id: number,
-    @Body(new ZodValidationPipe(updateUserSchema), UserExistPipe)
+    @Body(new ZodValidationPipe(updateUserSchema))
     updateUserDto: UpdateUserDto,
   ) {
     return this.userService.updateUser(id, updateUserDto);

@@ -10,6 +10,7 @@ import { Logger } from 'pino-nestjs';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import {
+  ConflictDomainFilter,
   ForbiddenDomainFilter,
   NotFoundDomainFilter,
   UnprocessableEntityDomainFilter,
@@ -32,6 +33,7 @@ async function bootstrap() {
     new NotFoundDomainFilter(),
     new ForbiddenDomainFilter(),
     new UnprocessableEntityDomainFilter(),
+    new ConflictDomainFilter(),
   );
 
   app.useGlobalInterceptors(new CamelCaseInterceptor());
