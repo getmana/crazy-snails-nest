@@ -5,6 +5,6 @@ import { Role } from '@prisma/client';
 @Injectable()
 export class DefaultUserFieldsPipe implements PipeTransform {
   transform(value: CreateUserPayload) {
-    return { ...value, role: Role.editor, isActive: true };
+    return { ...value, role: Role.editor };
   }
 }

@@ -115,7 +115,7 @@ export class AlbumsService {
           where: {
             ...(userId !== undefined && { user_id: userId }),
             ...(publishedOnly !== undefined && { is_published: publishedOnly }),
-            user: { isActive: true },
+            user: { is_active: true },
           },
           include: albumPreviewInclude,
           ...buildPaginationArgs(cursor, limit),
@@ -128,7 +128,7 @@ export class AlbumsService {
     const album = await this.prisma.album.findUnique({
       where: {
         id,
-        user: { isActive: true },
+        user: { is_active: true },
       },
       include: albumDetailIncludes(id),
     });

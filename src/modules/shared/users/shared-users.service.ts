@@ -25,7 +25,7 @@ export class SharedUsersService {
 
   async assertActiveUser(id: number): Promise<void> {
     const user = await this.prisma.user.findUnique({
-      where: { id, isActive: true },
+      where: { id, is_active: true },
       select: { id: true },
     });
 

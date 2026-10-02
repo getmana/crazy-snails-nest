@@ -10,7 +10,7 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async createUser(data: CreateUserDto): Promise<User> {
-    const { email, password, username, role, isActive, locale } = data;
+    const { email, password, username, role, locale } = data;
 
     await this.findExistingUser({ email, username });
 
@@ -22,7 +22,6 @@ export class UsersService {
         role,
         locale,
         password: hashedPassword,
-        isActive,
       },
     });
 
@@ -31,7 +30,7 @@ export class UsersService {
       username,
       id: user.id,
       role,
-      isActive,
+      isActive: user.is_active,
       locale: user.locale,
       adminTheme: user.admin_theme,
     };
@@ -40,7 +39,7 @@ export class UsersService {
   async findAll() {
     const users = await this.prisma.user.findMany({
       where: {
-        isActive: true,
+        is_active: true,
       },
       select: {
         id: true,
@@ -57,7 +56,7 @@ export class UsersService {
     const user = await this.prisma.user.findUnique({
       where: {
         id,
-        isActive: true,
+        is_active: true,
       },
       select: {
         id: true,
@@ -106,7 +105,7 @@ export class UsersService {
     }
 
     const user = await this.prisma.user.update({
-      where: { id, isActive: true },
+      where: { id, is_active: true },
       data: {
         username,
         email,
@@ -128,8 +127,8 @@ export class UsersService {
 
   async deactivateUser(id: number) {
     const deactivatedUser = await this.prisma.user.update({
-      where: { id, isActive: true },
-      data: { isActive: false },
+      where: { id, is_active: true },
+      data: { is_active: false },
     });
 
     return { id: deactivatedUser.id };

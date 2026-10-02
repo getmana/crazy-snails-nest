@@ -19,12 +19,12 @@ export type CreateUserPayload = z.infer<typeof createUserSchema>;
 
 export type CreateUserDto = CreateUserPayload & {
   role: Role;
-  isActive: boolean;
 };
 
 export type User = Omit<CreateUserDto, 'password'> & {
   id: number;
   adminTheme: AdminTheme;
+  isActive: boolean;
 };
 
 export const updateUserSchema = z.object({

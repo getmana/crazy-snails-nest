@@ -101,7 +101,7 @@ export class StoriesService {
           where: {
             ...(userId !== undefined && { user_id: userId }),
             ...(publishedOnly !== undefined && { is_published: publishedOnly }),
-            user: { isActive: true },
+            user: { is_active: true },
           },
           include: storyPreviewInclude,
           ...buildPaginationArgs(cursor, limit),
