@@ -1,8 +1,7 @@
 import { ErrorCodes } from 'src/constants/error-codes';
-import { DomainException } from './domain.exception';
 
-export class FileWriteException extends DomainException {
-  readonly code = ErrorCodes.FILE_WRITE_TO_STORAGE_ERROR;
+export class FileWriteException extends Error {
+  static readonly code = ErrorCodes.FILE_WRITE_TO_STORAGE_ERROR;
 
   constructor(message: string) {
     super(message);
