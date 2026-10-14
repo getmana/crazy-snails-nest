@@ -8,12 +8,12 @@ import { ActiveUserNotFoundException } from 'src/exceptions';
 export class SharedUsersService {
   constructor(private prisma: PrismaService) {}
 
-  async findByEmail(email: string) {
-    return this.prisma.user.findUnique({ where: { email } });
+  async findActiveByEmail(email: string) {
+    return this.prisma.user.findUnique({ where: { email, is_active: true } });
   }
 
   async validateUser(email: string, password: string) {
-    const user = await this.findByEmail(email);
+    const user = await this.findActiveByEmail(email);
     if (!user || !(await argon2.verify(user.password, password))) {
       throw new UnauthorizedException({
         message: 'Invalid credentials',
