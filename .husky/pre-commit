@@ -1,0 +1,2 @@
+lint-staged
+npm run --silent review:staged
