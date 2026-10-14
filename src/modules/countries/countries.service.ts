@@ -6,10 +6,11 @@ import { CountryCodesNotFoundException } from 'src/exceptions/country-codes-not-
 export class CountriesService {
   constructor(private prisma: PrismaService) {}
 
-  async findCountryByCode(codes: string[]): Promise<number[]> {
+  async findIdsByCodes(codes: string[]): Promise<number[]> {
+    const uniqueCodes = [...new Set(codes)];
     const countries = await this.prisma.country.findMany({
       where: {
-        code: { in: codes },
+        code: { in: uniqueCodes },
       },
       select: {
         id: true,
@@ -17,9 +18,9 @@ export class CountriesService {
       },
     });
 
-    if (countries.length !== codes.length) {
+    if (countries.length !== uniqueCodes.length) {
       const found = new Set(countries.map(({ code }) => code));
-      const missing = codes.filter((code) => !found.has(code));
+      const missing = uniqueCodes.filter((code) => !found.has(code));
 
       throw new CountryCodesNotFoundException(
         `Unknown country codes: ${missing.join(', ')}`,
