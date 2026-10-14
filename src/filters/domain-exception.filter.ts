@@ -7,6 +7,7 @@ import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception
 import { PreviewPhotoInvalidException } from 'src/exceptions/preview-photo-invalid.exception';
 import {
   ActiveUserNotFoundException,
+  CountryCodesNotFoundException,
   NoteNotFoundException,
   UserAlreadyExistsException,
 } from 'src/exceptions';
@@ -40,7 +41,7 @@ export class ForbiddenDomainFilter implements ExceptionFilter {
   }
 }
 
-@Catch(PreviewPhotoInvalidException)
+@Catch(PreviewPhotoInvalidException, CountryCodesNotFoundException)
 export class UnprocessableEntityDomainFilter implements ExceptionFilter {
   catch(
     { code, message }: { code: string; message: string },

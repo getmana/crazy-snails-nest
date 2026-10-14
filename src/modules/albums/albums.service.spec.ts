@@ -17,9 +17,7 @@ import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception
 import { PreviewPhotoInvalidException } from 'src/exceptions/preview-photo-invalid.exception';
 import { ActiveUserNotFoundException } from 'src/exceptions';
 import { type UserStrategyPayload } from '../auth/strategies';
-
-type AsyncFn = (...args: unknown[]) => Promise<unknown>;
-const asyncMock = () => jest.fn<AsyncFn>();
+import { asyncMock } from 'src/testing/jest-mocks';
 
 const mockTx = {
   photo: { count: asyncMock() },
