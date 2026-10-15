@@ -19,7 +19,12 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { FileUploadInterceptor } from 'src/interceptors';
 import { PhotosService } from './photos.service';
-import { ALLOWED_IMAGE_TYPES_REGEXP, MAX_IMAGE_SIZE } from 'src/constants';
+import {
+  ALLOWED_IMAGE_EXTENSIONS,
+  ALLOWED_IMAGE_TYPES_REGEXP,
+  MAX_IMAGE_SIZE,
+} from 'src/constants';
+import { ImageExtensionValidator } from 'src/pipes';
 import { CurrentUser } from 'src/decorators';
 import { type UserStrategyPayload } from '../auth/strategies';
 import { CreatePhotoDto } from './dto/create-photo.dto';
@@ -33,7 +38,7 @@ export class PhotosController {
   @UseGuards(AuthGuard('jwt'))
   @UseInterceptors(FileUploadInterceptor)
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Upload a photo (jpg/jpeg/png, max 10MB)' })
+  @ApiOperation({ summary: 'Upload a photo (jpg/jpeg/png/webp, max 10MB)' })
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -56,6 +61,9 @@ export class PhotosController {
         validators: [
           new MaxFileSizeValidator({ maxSize: MAX_IMAGE_SIZE }),
           new FileTypeValidator({ fileType: ALLOWED_IMAGE_TYPES_REGEXP }),
+          new ImageExtensionValidator({
+            allowedExtensions: ALLOWED_IMAGE_EXTENSIONS,
+          }),
         ],
       }),
     )
