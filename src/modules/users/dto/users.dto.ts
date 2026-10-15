@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Role, Locale, AdminTheme } from '@prisma/client';
+import { Locale, AdminTheme, Role } from '@prisma/client';
 import { prismaEnumValues } from 'src/utils';
 
 export const createUserSchema = z.object({
@@ -17,14 +17,13 @@ export const createUserSchema = z.object({
 
 export type CreateUserPayload = z.infer<typeof createUserSchema>;
 
-export type CreateUserDto = CreateUserPayload & {
-  role: Role;
-};
+export type CreateUserDto = CreateUserPayload;
 
 export type User = Omit<CreateUserDto, 'password'> & {
   id: number;
   adminTheme: AdminTheme;
   isActive: boolean;
+  role: Role;
 };
 
 export const updateUserSchema = z.object({

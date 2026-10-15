@@ -63,7 +63,6 @@ describe('UsersService', () => {
       email: 'new@example.com',
       username: 'newbie',
       password: PASSWORD,
-      role: Role.editor,
       locale: Locale.en,
     };
 
@@ -86,6 +85,29 @@ describe('UsersService', () => {
 
       expect(mockPrisma.user.findFirst).toHaveBeenCalledWith({
         where: { OR: [{ email: signup.email }, { username: signup.username }] },
+      });
+    });
+
+    it('creates every new user as an editor', async () => {
+      mockPrisma.user.findFirst.mockResolvedValue(null);
+      mockPrisma.user.create.mockResolvedValue(createdRow);
+
+      await service.createUser(signup);
+
+      expect(firstCallArgs(mockPrisma.user.create).data).toMatchObject({
+        role: Role.editor,
+      });
+    });
+
+    it('ignores a role smuggled into the sign-up data', async () => {
+      mockPrisma.user.findFirst.mockResolvedValue(null);
+      mockPrisma.user.create.mockResolvedValue(createdRow);
+      const withAdminRole = { ...signup, role: Role.admin };
+
+      await service.createUser(withAdminRole);
+
+      expect(firstCallArgs(mockPrisma.user.create).data).toMatchObject({
+        role: Role.editor,
       });
     });
 
