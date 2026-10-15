@@ -26,7 +26,7 @@ import {
   type UpdateUserDto,
   updateUserSchema,
 } from './dto/users.dto';
-import { DefaultUserFieldsPipe, ZodValidationPipe } from 'src/pipes';
+import { ZodValidationPipe } from 'src/pipes';
 import { RolesGuard } from 'src/guards/roles.guard';
 import { Roles } from 'src/decorators';
 import { AuthGuard } from '@nestjs/passport';
@@ -39,7 +39,7 @@ export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
   @Post()
-  @UsePipes(new ZodValidationPipe(createUserSchema), DefaultUserFieldsPipe)
+  @UsePipes(new ZodValidationPipe(createUserSchema))
   @ApiOperation({ summary: 'Register a new user' })
   @ApiBody({ schema: zodToApiSchema(createUserSchema) })
   @ApiResponse({ status: 201, description: 'User created' })

@@ -1,5 +1,6 @@
 import argon2 from 'argon2';
 import { Injectable } from '@nestjs/common';
+import { Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto, UpdateUserDto, type User } from './dto/users.dto';
 import { ActiveUserNotFoundException } from 'src/exceptions/active-user-not-found.exception';
@@ -10,7 +11,7 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async createUser(data: CreateUserDto): Promise<User> {
-    const { email, password, username, role, locale } = data;
+    const { email, password, username, locale } = data;
 
     await this.findExistingUser({ email, username });
 
@@ -19,7 +20,7 @@ export class UsersService {
       data: {
         email,
         username,
-        role,
+        role: Role.editor,
         locale,
         password: hashedPassword,
       },
@@ -29,7 +30,7 @@ export class UsersService {
       email,
       username,
       id: user.id,
-      role,
+      role: user.role,
       isActive: user.is_active,
       locale: user.locale,
       adminTheme: user.admin_theme,
