@@ -18,13 +18,20 @@ export class PhotosService {
     userId: number;
   }): Promise<CreatePhotoDto> {
     const originalKey = await this.storageService.saveFile(file);
-    const photo = await this.prisma.photo.create({
-      data: {
-        original_key: originalKey,
-        status: 'pending',
-        user_id: userId,
-      },
-    });
+    const photo = await this.prisma.photo
+      .create({
+        data: {
+          original_key: originalKey,
+          status: 'pending',
+          user_id: userId,
+        },
+      })
+      .catch(async (dbError: unknown) => {
+        await this.storageService
+          .deleteFile(originalKey)
+          .catch(() => undefined);
+        throw dbError;
+      });
     return {
       photoId: photo.id,
       originalUrl: this.storageService.getPublicFilePath(originalKey),
