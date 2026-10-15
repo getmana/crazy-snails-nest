@@ -63,6 +63,7 @@ export class StoriesService {
     const story = await this.prisma.story.findUnique({
       where: {
         id,
+        user: { is_active: true },
       },
       include: storyPhotoIncludes,
     });
