@@ -1,8 +1,10 @@
 import argon2 from 'argon2';
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
-import { ErrorCodes } from 'src/constants/error-codes';
-import { ActiveUserNotFoundException } from 'src/exceptions';
+import {
+  ActiveUserNotFoundException,
+  InvalidCredentialsException,
+} from 'src/exceptions';
 
 @Injectable()
 export class SharedUsersService {
@@ -15,10 +17,7 @@ export class SharedUsersService {
   async validateUser(email: string, password: string) {
     const user = await this.findActiveByEmail(email);
     if (!user || !(await argon2.verify(user.password, password))) {
-      throw new UnauthorizedException({
-        message: 'Invalid credentials',
-        code: ErrorCodes.INVALID_CREDENTIALS,
-      });
+      throw new InvalidCredentialsException('Invalid credentials');
     }
     return user;
   }

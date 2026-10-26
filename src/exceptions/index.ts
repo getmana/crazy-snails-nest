@@ -4,3 +4,4 @@ export { CountryCodesNotFoundException } from './country-codes-not-found.excepti
 export { FileWriteException } from './file-write.exception';
 export { UserAlreadyExistsException } from './user-already-exists.exception';
 export { NoteNotFoundException } from './note-not-found.exception';
+export { InvalidCredentialsException } from './invalid-credentials.exception';

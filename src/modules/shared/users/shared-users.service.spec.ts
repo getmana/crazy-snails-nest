@@ -8,11 +8,13 @@ import {
   jest,
 } from '@jest/globals';
 import { Test } from '@nestjs/testing';
-import { UnauthorizedException } from '@nestjs/common';
 import argon2 from 'argon2';
 import { SharedUsersService } from './shared-users.service';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
-import { ActiveUserNotFoundException } from 'src/exceptions';
+import {
+  ActiveUserNotFoundException,
+  InvalidCredentialsException,
+} from 'src/exceptions';
 import { ErrorCodes } from 'src/constants/error-codes';
 import { asyncMock } from 'src/testing/jest-mocks';
 
@@ -48,10 +50,8 @@ describe('SharedUsersService', () => {
 
   describe('validateUser', () => {
     const invalidCredentials = {
-      response: {
-        message: 'Invalid credentials',
-        code: ErrorCodes.INVALID_CREDENTIALS,
-      },
+      message: 'Invalid credentials',
+      code: ErrorCodes.INVALID_CREDENTIALS,
     };
 
     it('returns the user when the password matches', async () => {
@@ -70,7 +70,7 @@ describe('SharedUsersService', () => {
 
       const call = service.validateUser(EMAIL, 'Wrong-Password-1');
 
-      await expect(call).rejects.toBeInstanceOf(UnauthorizedException);
+      await expect(call).rejects.toBeInstanceOf(InvalidCredentialsException);
       await expect(call).rejects.toMatchObject(invalidCredentials);
     });
 
@@ -79,7 +79,7 @@ describe('SharedUsersService', () => {
 
       const call = service.validateUser('nobody@example.com', PASSWORD);
 
-      await expect(call).rejects.toBeInstanceOf(UnauthorizedException);
+      await expect(call).rejects.toBeInstanceOf(InvalidCredentialsException);
       await expect(call).rejects.toMatchObject(invalidCredentials);
     });
 

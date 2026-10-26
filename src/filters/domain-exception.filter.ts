@@ -8,6 +8,7 @@ import { PreviewPhotoInvalidException } from 'src/exceptions/preview-photo-inval
 import {
   ActiveUserNotFoundException,
   CountryCodesNotFoundException,
+  InvalidCredentialsException,
   NoteNotFoundException,
   UserAlreadyExistsException,
 } from 'src/exceptions';
@@ -61,6 +62,19 @@ export class ConflictDomainFilter implements ExceptionFilter {
     host: ArgumentsHost,
   ) {
     host.switchToHttp().getResponse<Response>().status(409).json({
+      message,
+      code,
+    });
+  }
+}
+
+@Catch(InvalidCredentialsException)
+export class UnauthorizedDomainFilter implements ExceptionFilter {
+  catch(
+    { code, message }: { code: string; message: string },
+    host: ArgumentsHost,
+  ) {
+    host.switchToHttp().getResponse<Response>().status(401).json({
       message,
       code,
     });

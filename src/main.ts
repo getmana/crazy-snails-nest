@@ -13,6 +13,7 @@ import {
   ConflictDomainFilter,
   ForbiddenDomainFilter,
   NotFoundDomainFilter,
+  UnauthorizedDomainFilter,
   UnprocessableEntityDomainFilter,
 } from './filters/domain-exception.filter';
 import { CamelCaseInterceptor } from './interceptors';
@@ -35,6 +36,7 @@ async function bootstrap() {
     new ForbiddenDomainFilter(),
     new UnprocessableEntityDomainFilter(),
     new ConflictDomainFilter(),
+    new UnauthorizedDomainFilter(),
     new TokenGenerationFailedFilter(),
   );
 
