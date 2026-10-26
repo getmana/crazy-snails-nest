@@ -16,6 +16,7 @@ import {
   UnprocessableEntityDomainFilter,
 } from './filters/domain-exception.filter';
 import { CamelCaseInterceptor } from './interceptors';
+import { TokenGenerationFailedFilter } from './filters/token-generation-exception.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -34,6 +35,7 @@ async function bootstrap() {
     new ForbiddenDomainFilter(),
     new UnprocessableEntityDomainFilter(),
     new ConflictDomainFilter(),
+    new TokenGenerationFailedFilter(),
   );
 
   app.useGlobalInterceptors(new CamelCaseInterceptor());

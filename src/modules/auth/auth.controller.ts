@@ -6,7 +6,6 @@ import {
   HttpCode,
   UseGuards,
   Req,
-  InternalServerErrorException,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -20,9 +19,8 @@ import { AuthGuard } from '@nestjs/passport';
 import { type Request, type Response } from 'express';
 import { signInSchema, type SignInPayload } from './dto/auth.dto';
 import { UserStrategyPayload } from './strategies';
-import { TokenGenerationFailedException } from 'src/exceptions';
-import { ErrorCodes } from 'src/constants/error-codes';
 import { zodToApiSchema } from 'src/utils';
+import { ZodValidationPipe } from 'src/pipes';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -38,7 +36,9 @@ export class AuthController {
     description: 'Returns access token, refresh token, user id and locale',
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
-  async signin(@Body() signInPayload: SignInPayload) {
+  async signin(
+    @Body(new ZodValidationPipe(signInSchema)) signInPayload: SignInPayload,
+  ) {
     const user = await this.authService.validateUser(
       signInPayload.email,
       signInPayload.password,
@@ -59,18 +59,9 @@ export class AuthController {
   @ApiResponse({ status: 500, description: 'Token generation failed' })
   async refresh(@Req() req: Request & { user: UserStrategyPayload }) {
     const user = req.user;
-    try {
-      const result = await this.authService.refreshToken(user);
-      return result;
-    } catch (e) {
-      throw new InternalServerErrorException({
-        message:
-          e instanceof TokenGenerationFailedException
-            ? e.message
-            : 'Internal Server Error',
-        code: ErrorCodes.INTERNAL_SERVER_ERROR,
-      });
-    }
+    const result = await this.authService.refreshToken(user);
+
+    return result;
   }
 
   @Post('sign-out')
