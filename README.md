@@ -25,33 +25,44 @@ This is the backend, built as a hands-on learning project to grow NestJS and API
 - **NestJS** + TypeScript
 - **Prisma** ORM + **PostgreSQL**
 - **Zod** — request validation at the HTTP boundary
-- **JWT** + **Passport** — authentication with access + refresh token rotation
+- **JWT** + **Passport** — access and refresh tokens, verified against the database on every request
+- **argon2** — password hashing
 - **pino** (`pino-nestjs`) — structured logging
 - **Multer** — file upload (memory storage)
+- **Jest** — unit tests; 
+- **GitHub Actions** — CI
 
 ## Architecture highlights
 
-- **Strict layering**: Controller → Service → Prisma. No HTTP types in services, no Prisma types leaking into controllers.
-- **Domain errors**: services throw plain `Error` subclasses; controllers translate them to HTTP exceptions. Business logic stays framework-agnostic.
-- **Global exception filters**: Prisma constraint errors mapped to structured responses (P2002 → 409, P2025 → 404); Zod validation errors handled uniformly.
-- **Storage abstraction**: `StorageService` returns storage keys, not URLs. Calling code constructs URLs at read time — swap local disk for S3/R2 by changing one service.
-- **Structured error codes**: responses carry `{ message, code }` so the frontend handles i18n — the backend never decides what to show the user.
+- **Layering**: Controller → Service → Prisma. Controllers handle routing, guards and validation, and never touch Prisma; services own the business rules and data access.
+- **Domain errors**: services throw `DomainException` subclasses that carry an error `code` but no HTTP status. Global exception filters map them to responses (404 / 403 / 409 / 422 / 500).
+- **Global exception filters**: Prisma errors are mapped to structured responses (P2002 → 409, P2025 → 404, anything else → logged 500), and Zod validation errors become a uniform 400.
+- **Structured error codes**: domain and Prisma errors return `{ message, code }`, so the frontend handles i18n and the backend never decides what to show the user. 
+- **Storage-agnostic file handling**: the database stores storage keys, never URLs or disk paths, and all file I/O goes through `StorageService` (`saveFile`, `deleteFile`, `getPublicFilePath`). Today files live on local disk and are served under `/uploads/`. Moving to S3, R2 or another object store means swapping the `StorageService` implementation and the static route. Stored keys stay valid, so no database migration is needed.
+- **camelCase API over a snake_case schema**: services map request fields to columns, and a global interceptor converts response keys to camelCase.
+- **Upload hardening**: an image must pass a magic-byte content check *and* an extension allowlist, so a valid image can't be stored or served as HTML.
 
 ## Current state
 
 **Implemented**
-- Auth — sign-in, sign-out, JWT refresh token rotation
-- Users — CRUD, deactivation, locale and theme preferences
-- Albums — create (with activity types, countries, date range), list, get, delete
-- Photos — upload endpoint, returns original URL
-- Countries — seed data + lookup endpoint
+- **Auth**: sign-in (validated body, argon2), token refresh issuing a new access + refresh pair, sign-out. Deactivated users can't sign in or use existing tokens.
+- **Users**: registration (always as `editor`), list, get, update (username, email, locale, admin theme), soft deactivation (admin only). Email and username uniqueness is checked with clear 409 messages.
+- **Albums**:
+  - create (activity types, countries, date range), public list of published albums, "my albums" (including drafts), get, delete;
+  - update with an **ordered photo list** and a preview photo, inside one transaction with ownership checks;
+  - published/draft visibility: drafts are visible only to their owner;
+  - **per-photo notes** (title, rich-text description, country, date), which back the album story mode.
+- **Stories**: create, public list of published stories, "my stories" (including drafts), get, delete, and update of the rich-text content and the hero, pair, gallery and captioned carousel photo sections. Each section keeps its own photo order.
+- **Photos**: upload (jpg/jpeg/png/webp, max 10 MB). If the database insert fails, the stored file is cleaned up.
+- **Countries**: seed data + list endpoint.
+- **Per-user listings**: `GET /users/:id/albums` and `GET /users/:id/stories`, published items only, cursor-paginated.
 
 **Planned / in progress**
-- Photo reordering with drag-and-drop
-- Photo processing pipeline (thumbnails, WebP)
-- Stories module
-- Album story-mode view
+- Photo processing pipeline (thumbnails, WebP). Uploads are currently stored as `pending`, with no thumbnails.
 - Interactive map per album
+- Custom section
+- Per-user subdomains
+- Integration / e2e tests against a test database
 
 ## API Documentation
 
@@ -60,6 +71,8 @@ Interactive API docs are available at `http://localhost:4000/api-docs` when the 
 Request body schemas are derived directly from the existing Zod schemas via `z.toJSONSchema()` — no duplicate type definitions.
 
 ## Running locally
+
+Requires Node 24 (see `.nvmrc`) and a PostgreSQL database.
 
 ```bash
 npm install
@@ -74,9 +87,45 @@ PORT=4000
 ```
 
 ```bash
-npx prisma migrate dev
+npx prisma migrate dev   # apply migrations
+npx prisma db seed       # seed countries
 npm run start:dev
 ```
+
+## Testing
+
+The suite contains **unit tests only**: 13 suites, 120 tests. They need no database or running server, because Prisma and other collaborators are mocked through Nest's testing module.
+
+What's covered:
+- **Services**: albums, stories, users, photos, countries, auth, shared users and storage. The tests cover business rules and their failure paths:
+  - ownership checks, and published vs draft visibility;
+  - PATCH semantics for photo sections, and stale-preview handling;
+  - email/username uniqueness, and the default role;
+  - cleanup of an uploaded file when the database insert fails.
+- **Guards**: role checks, self-or-admin, and optional authentication.
+- **Upload validation**: the image extension allowlist.
+- **Security contracts**:
+  - passwords are stored hashed and never returned or selected;
+  - access and refresh tokens are signed with separate secrets and the right expiry;
+  - deactivated users are rejected.
+
+Where it adds confidence, the tests use the real library instead of a mock: argon2 hashing, JWT signing and verification, and Nest's real `ExecutionContext` for guards. The file system and clock are stubbed, so storage tests never touch the disk.
+
+Specs live next to the code they test (`*.spec.ts`).
+
+```bash
+npm test                                   # run all tests
+npm run test:watch                         # re-run on change
+npm run test:cov                           # with coverage report (./coverage)
+npx jest --testPathPatterns albums.service # run a single spec
+npm run typecheck                          # type-check app code and specs
+```
+
+Jest only transpiles TypeScript and doesn't type-check, so `npm run typecheck` is the step that catches type errors in specs.
+
+**Automation**
+- **Pre-commit hook** (Husky + lint-staged): runs ESLint and only the tests related to the staged files. It then runs an optional AI code review of the staged diff (`scripts/ai-review.sh`), with read-only tool permissions and a confirm prompt. Skip the review for one commit with `SKIP_AI_REVIEW=1`.
+- **CI** (GitHub Actions, on every pull request and push to `master`): lint, type-check, build and the full test suite. Passing CI is required before merging to `master`.
 
 ## License
 
