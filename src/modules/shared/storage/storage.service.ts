@@ -33,7 +33,7 @@ export class StorageService {
         e instanceof Error ? e.stack : String(e),
         StorageService.name,
       );
-      throw new FileWriteException(`Error writing file: ${file.originalname}`);
+      throw new FileWriteException('Failed to save file');
     }
   }
 

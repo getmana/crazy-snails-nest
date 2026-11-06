@@ -1,23 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ZodFilter } from './filters/zod-error.filter';
-import { FileWriteFilter } from './filters/file-write-error.filter';
-import { PrismaExceptionFilter } from './filters/prisma-exception.filter';
 import { join } from 'path';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { FILE_UPLOAD_URL } from './constants';
 import { Logger } from 'pino-nestjs';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
-import {
-  ConflictDomainFilter,
-  ForbiddenDomainFilter,
-  NotFoundDomainFilter,
-  UnauthorizedDomainFilter,
-  UnprocessableEntityDomainFilter,
-} from './filters/domain-exception.filter';
 import { CamelCaseInterceptor } from './interceptors';
-import { TokenGenerationFailedFilter } from './filters/token-generation-exception.filter';
+import { AllExceptionsFilter } from './filters/all-exceptions.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
@@ -28,17 +18,7 @@ async function bootstrap() {
     prefix: `/${FILE_UPLOAD_URL}/`,
   });
 
-  app.useGlobalFilters(
-    new ZodFilter(),
-    new FileWriteFilter(),
-    new PrismaExceptionFilter(),
-    new NotFoundDomainFilter(),
-    new ForbiddenDomainFilter(),
-    new UnprocessableEntityDomainFilter(),
-    new ConflictDomainFilter(),
-    new UnauthorizedDomainFilter(),
-    new TokenGenerationFailedFilter(),
-  );
+  app.useGlobalFilters(new AllExceptionsFilter());
 
   app.useGlobalInterceptors(new CamelCaseInterceptor());
 

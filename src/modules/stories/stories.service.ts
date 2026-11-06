@@ -73,7 +73,7 @@ export class StoriesService {
 
     if (!story.is_published && story.user_id !== requesterId)
       throw new EntityNotPublished(
-        `Story with id ${id} not published`,
+        `Story with id ${id} not found`,
         ErrorCodes.STORY_NOT_FOUND,
       );
 
