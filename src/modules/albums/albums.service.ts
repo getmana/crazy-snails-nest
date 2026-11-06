@@ -138,7 +138,7 @@ export class AlbumsService {
 
     if (!album.is_published && album.user_id !== requesterId)
       throw new EntityNotPublished(
-        `Album with id ${id} not published`,
+        `Album with id ${id} not found`,
         ErrorCodes.ALBUM_NOT_FOUND,
       );
 

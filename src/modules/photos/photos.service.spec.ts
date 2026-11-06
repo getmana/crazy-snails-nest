@@ -67,7 +67,7 @@ describe('PhotosService.create', () => {
 
   it('does not record a photo when storing the file fails', async () => {
     mockStorage.saveFile.mockRejectedValue(
-      new FileWriteException('Error writing file: photo.png'),
+      new FileWriteException('Failed to save file'),
     );
 
     await expect(service.create({ file, userId: 7 })).rejects.toBeInstanceOf(

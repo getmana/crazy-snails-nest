@@ -106,7 +106,7 @@ export class NotesService {
 
     if (note.album.user_id !== userId && !note.album.is_published)
       throw new EntityNotPublished(
-        `Note belongs to not published album`,
+        `Album with id ${albumId} not found`,
         ErrorCodes.ALBUM_NOT_FOUND,
       );
 
