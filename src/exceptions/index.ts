@@ -5,3 +5,4 @@ export { FileWriteException } from './file-write.exception';
 export { UserAlreadyExistsException } from './user-already-exists.exception';
 export { NoteNotFoundException } from './note-not-found.exception';
 export { InvalidCredentialsException } from './invalid-credentials.exception';
+export { StoryPhotoDuplicatedException } from './story-photo-duplicated.exception';
