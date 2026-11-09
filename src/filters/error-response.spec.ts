@@ -17,6 +17,7 @@ import {
   FileWriteException,
   InvalidCredentialsException,
   NoteNotFoundException,
+  StoryPhotoDuplicatedException,
   TokenGenerationFailedException,
   UserAlreadyExistsException,
 } from 'src/exceptions';
@@ -71,6 +72,12 @@ describe('toErrorResponse', () => {
     [new PhotoNotOwnedException("Some photos don't belong to the user"), 403],
     [new PreviewPhotoInvalidException('Preview photo invalid'), 422],
     [new CountryCodesNotFoundException('Unknown country codes: XX'), 422],
+    [
+      new StoryPhotoDuplicatedException(
+        'Photos with IDs 5 are used in more than one story section',
+      ),
+      422,
+    ],
     [
       new UserAlreadyExistsException('A user with this email already exists'),
       409,

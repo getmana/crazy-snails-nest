@@ -269,6 +269,16 @@ describe('AlbumsService', () => {
       });
     });
 
+    it('does not treat a repeated owned photo as not owned', async () => {
+      mockTx.photo.count.mockResolvedValue(1);
+      mockTx.note.deleteMany.mockResolvedValue({ count: 0 });
+      mockTx.album.update.mockResolvedValue({ id: 1, preview_image_id: 1 });
+
+      await expect(
+        service.update({ ...baseDto, albumPhotoIds: [1, 1] }),
+      ).resolves.toBeDefined();
+    });
+
     it('does not call note.deleteMany when albumPhotoIds is undefined', async () => {
       mockTx.album.update.mockResolvedValue({ id: 1, preview_image_id: null });
 

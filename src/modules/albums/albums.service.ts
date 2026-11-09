@@ -173,7 +173,7 @@ export class AlbumsService {
           where: { id: { in: albumPhotoIds }, user_id: userId },
         });
 
-        if (owned !== albumPhotoIds.length)
+        if (owned !== new Set(albumPhotoIds).size)
           throw new PhotoNotOwnedException(
             "Some photos don't belong to the user",
           );

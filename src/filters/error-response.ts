@@ -8,6 +8,7 @@ import {
   FileWriteException,
   InvalidCredentialsException,
   NoteNotFoundException,
+  StoryPhotoDuplicatedException,
   TokenGenerationFailedException,
   UserAlreadyExistsException,
 } from 'src/exceptions';
@@ -42,6 +43,7 @@ const DOMAIN_EXCEPTION_STATUS: [DomainExceptionClass, HttpStatus][] = [
   [EntityNotPublished, HttpStatus.NOT_FOUND],
   [PhotoNotOwnedException, HttpStatus.FORBIDDEN],
   [PreviewPhotoInvalidException, HttpStatus.UNPROCESSABLE_ENTITY],
+  [StoryPhotoDuplicatedException, HttpStatus.UNPROCESSABLE_ENTITY],
   [CountryCodesNotFoundException, HttpStatus.UNPROCESSABLE_ENTITY],
   [UserAlreadyExistsException, HttpStatus.CONFLICT],
   [InvalidCredentialsException, HttpStatus.UNAUTHORIZED],

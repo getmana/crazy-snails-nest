@@ -6,6 +6,15 @@ import { StoryNotFoundException } from 'src/exceptions/story-not-found.exception
 import { ErrorCodes } from 'src/constants/error-codes';
 import { UpdateStoryDto } from './dto/update-story.dto';
 import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception';
+import { StoryPhotoDuplicatedException } from 'src/exceptions';
+import {
+  type RequestedStoryPhotos,
+  findDuplicatedIds,
+  hasRequestedPhotos,
+  listRequestedPhotoIds,
+  resolveStoryPhotoIds,
+  storedStoryPhotosSelect,
+} from './utils';
 import { Prisma } from '@prisma/client';
 import { buildPaginationArgs, findManyPaginated, toJsonInput } from 'src/utils';
 import { UserStrategyPayload } from '../auth/strategies';
@@ -132,82 +141,127 @@ export class StoriesService {
       isPublished,
     } = updateStoryDto;
 
-    const carouselPhotoIds = carouselPhotos?.map(({ photoId }) => photoId);
+    const requestedPhotos: RequestedStoryPhotos = {
+      heroImageId,
+      pairPhotoIds,
+      galleryPhotoIds,
+      carouselPhotoIds: carouselPhotos?.map(({ photoId }) => photoId),
+    };
 
-    const photoIds = [
-      ...(heroImageId !== null && heroImageId !== undefined
-        ? [heroImageId]
-        : []),
-      ...(Array.isArray(pairPhotoIds) ? pairPhotoIds : []),
-      ...(Array.isArray(galleryPhotoIds) ? galleryPhotoIds : []),
-      ...(Array.isArray(carouselPhotoIds) ? carouselPhotoIds : []),
-    ];
+    return this.prisma.$transaction(async (tx) => {
+      await this.lockOwnedStory(tx, id, userId);
 
-    const owned = await this.prisma.photo.count({
+      if (hasRequestedPhotos(requestedPhotos)) {
+        await this.assertPhotosOwned(tx, requestedPhotos, userId);
+        await this.assertNoDuplicatedPhotos(tx, id, requestedPhotos);
+      }
+
+      return tx.story.update({
+        where: { id, user_id: userId },
+        data: {
+          title,
+          title_en: titleEn,
+          title_uk: titleUk,
+          description: toJsonInput(description),
+          description_en: toJsonInput(descriptionEn),
+          description_uk: toJsonInput(descriptionUk),
+          subtitle,
+          subtitle_en: subtitleEn,
+          subtitle_uk: subtitleUk,
+          hero_first: heroFirst,
+          is_published: isPublished,
+          hero_image_id: heroImageId,
+          ...(pairPhotoIds !== undefined && {
+            pair_image_stories: {
+              deleteMany: { story_id: id },
+              create: pairPhotoIds.map((photoId, position) => ({
+                position,
+                photo: {
+                  connect: { id: photoId },
+                },
+              })),
+            },
+          }),
+          ...(galleryPhotoIds !== undefined && {
+            gallery_image_stories: {
+              deleteMany: { story_id: id },
+              create: galleryPhotoIds.map((photoId, position) => ({
+                position,
+                photo: {
+                  connect: { id: photoId },
+                },
+              })),
+            },
+          }),
+          ...(carouselPhotos !== undefined && {
+            carousel_stories: {
+              deleteMany: { story_id: id },
+              create: carouselPhotos.map(
+                ({ photoId, caption, captionEn, captionUk }, position) => ({
+                  position,
+                  photo: {
+                    connect: { id: photoId },
+                  },
+                  caption,
+                  caption_en: captionEn,
+                  caption_uk: captionUk,
+                }),
+              ),
+            },
+          }),
+        },
+        include: storyPhotoIncludes,
+      });
+    });
+  }
+
+  private async lockOwnedStory(
+    tx: Prisma.TransactionClient,
+    id: number,
+    userId: number,
+  ) {
+    const locked = await tx.$queryRaw<{ id: number }[]>`
+      SELECT id FROM "Story" WHERE id = ${id} AND user_id = ${userId} FOR UPDATE
+    `;
+
+    if (!locked.length)
+      throw new StoryNotFoundException(`Story with id ${id} not found`);
+  }
+
+  private async assertPhotosOwned(
+    tx: Prisma.TransactionClient,
+    requested: RequestedStoryPhotos,
+    userId: number,
+  ) {
+    const photoIds = [...new Set(listRequestedPhotoIds(requested))];
+    if (!photoIds.length) return;
+
+    const owned = await tx.photo.count({
       where: { id: { in: photoIds }, user_id: userId },
     });
 
     if (owned !== photoIds.length)
       throw new PhotoNotOwnedException("Some photos don't belong to the user");
+  }
 
-    const story = await this.prisma.story.update({
-      where: { id, user_id: userId },
-      data: {
-        title,
-        title_en: titleEn,
-        title_uk: titleUk,
-        description: toJsonInput(description),
-        description_en: toJsonInput(descriptionEn),
-        description_uk: toJsonInput(descriptionUk),
-        subtitle,
-        subtitle_en: subtitleEn,
-        subtitle_uk: subtitleUk,
-        hero_first: heroFirst,
-        is_published: isPublished,
-        hero_image_id: heroImageId,
-        ...(pairPhotoIds !== undefined && {
-          pair_image_stories: {
-            deleteMany: { story_id: id },
-            create: pairPhotoIds.map((photoId, position) => ({
-              position,
-              photo: {
-                connect: { id: photoId },
-              },
-            })),
-          },
-        }),
-        ...(galleryPhotoIds !== undefined && {
-          gallery_image_stories: {
-            deleteMany: { story_id: id },
-            create: galleryPhotoIds.map((photoId, position) => ({
-              position,
-              photo: {
-                connect: { id: photoId },
-              },
-            })),
-          },
-        }),
-        ...(carouselPhotos !== undefined && {
-          carousel_stories: {
-            deleteMany: { story_id: id },
-            create: carouselPhotos.map(
-              ({ photoId, caption, captionEn, captionUk }, position) => ({
-                position,
-                photo: {
-                  connect: { id: photoId },
-                },
-                caption,
-                caption_en: captionEn,
-                caption_uk: captionUk,
-              }),
-            ),
-          },
-        }),
-      },
-      include: storyPhotoIncludes,
+  private async assertNoDuplicatedPhotos(
+    tx: Prisma.TransactionClient,
+    id: number,
+    requested: RequestedStoryPhotos,
+  ) {
+    const stored = await tx.story.findUniqueOrThrow({
+      where: { id },
+      select: storedStoryPhotosSelect,
     });
 
-    return story;
+    const duplicated = findDuplicatedIds(
+      resolveStoryPhotoIds(requested, stored),
+    );
+
+    if (duplicated.length)
+      throw new StoryPhotoDuplicatedException(
+        `Photos with IDs ${duplicated.join(', ')} are used in more than one story section`,
+      );
   }
 
   async remove(id: number, user: UserStrategyPayload) {

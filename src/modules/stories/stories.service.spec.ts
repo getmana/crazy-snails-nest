@@ -14,20 +14,30 @@ import { SharedUsersService } from '../shared/users/shared-users.service';
 import { StoryNotFoundException } from 'src/exceptions/story-not-found.exception';
 import { EntityNotPublished } from 'src/exceptions/entity-not-published.exception';
 import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception';
-import { ActiveUserNotFoundException } from 'src/exceptions';
+import {
+  ActiveUserNotFoundException,
+  StoryPhotoDuplicatedException,
+} from 'src/exceptions';
 import { ErrorCodes } from 'src/constants/error-codes';
 import { type UserStrategyPayload } from '../auth/strategies';
 import { asyncMock } from 'src/testing/jest-mocks';
+
+const mockTx = {
+  $queryRaw: asyncMock(),
+  photo: { count: asyncMock() },
+  story: { findUniqueOrThrow: asyncMock(), update: asyncMock() },
+};
+
+type TransactionCallback = (tx: typeof mockTx) => Promise<unknown>;
 
 const mockPrisma = {
   story: {
     create: asyncMock(),
     findUnique: asyncMock(),
     findMany: asyncMock(),
-    update: asyncMock(),
     delete: asyncMock(),
   },
-  photo: { count: asyncMock() },
+  $transaction: jest.fn<(callback: TransactionCallback) => Promise<unknown>>(),
 };
 
 const mockSharedUsers = {
@@ -196,16 +206,68 @@ describe('StoriesService', () => {
   describe('update', () => {
     const base = { id: 1, userId: 42 };
 
+    const storedPhotos = ({
+      hero = null,
+      pair = [],
+      gallery = [],
+      carousel = [],
+    }: {
+      hero?: number | null;
+      pair?: number[];
+      gallery?: number[];
+      carousel?: number[];
+    } = {}) => ({
+      hero_image_id: hero,
+      pair_image_stories: pair.map((photo_id) => ({ photo_id })),
+      gallery_image_stories: gallery.map((photo_id) => ({ photo_id })),
+      carousel_stories: carousel.map((photo_id) => ({ photo_id })),
+    });
+
     const updateData = () => {
-      const [[args]] = mockPrisma.story.update.mock.calls as [
+      const [[args]] = mockTx.story.update.mock.calls as [
         [{ data: Record<string, unknown> }],
       ];
       return args.data;
     };
 
+    beforeEach(() => {
+      mockPrisma.$transaction.mockImplementation((callback) =>
+        callback(mockTx),
+      );
+      mockTx.$queryRaw.mockResolvedValue([{ id: 1 }]);
+      mockTx.story.findUniqueOrThrow.mockResolvedValue(storedPhotos());
+      mockTx.story.update.mockResolvedValue({ id: 1 });
+    });
+
+    it('locks the story row of this user before anything else', async () => {
+      mockTx.photo.count.mockResolvedValue(1);
+
+      await service.update({ ...base, galleryPhotoIds: [3] });
+
+      const [lockCall] = mockTx.$queryRaw.mock.calls;
+      expect(lockCall.slice(1)).toEqual([1, 42]);
+
+      const [lockOrder] = mockTx.$queryRaw.mock.invocationCallOrder;
+      const laterCalls = [
+        ...mockTx.photo.count.mock.invocationCallOrder,
+        ...mockTx.story.findUniqueOrThrow.mock.invocationCallOrder,
+        ...mockTx.story.update.mock.invocationCallOrder,
+      ];
+      expect(laterCalls.every((order) => order > lockOrder)).toBe(true);
+    });
+
+    it('throws StoryNotFoundException when the story is missing or not owned', async () => {
+      mockTx.$queryRaw.mockResolvedValue([]);
+
+      await expect(
+        service.update({ ...base, galleryPhotoIds: [3] }),
+      ).rejects.toBeInstanceOf(StoryNotFoundException);
+      expect(mockTx.photo.count).not.toHaveBeenCalled();
+      expect(mockTx.story.update).not.toHaveBeenCalled();
+    });
+
     it('checks ownership of the photos from every section', async () => {
-      mockPrisma.photo.count.mockResolvedValue(5);
-      mockPrisma.story.update.mockResolvedValue({ id: 1 });
+      mockTx.photo.count.mockResolvedValue(5);
 
       await service.update({
         ...base,
@@ -215,36 +277,109 @@ describe('StoriesService', () => {
         carouselPhotos: [{ photoId: 5 }],
       });
 
-      expect(mockPrisma.photo.count).toHaveBeenCalledWith({
+      expect(mockTx.photo.count).toHaveBeenCalledWith({
         where: { id: { in: [1, 2, 3, 4, 5] }, user_id: 42 },
       });
     });
 
-    it('clears the hero image without checking it for ownership', async () => {
-      mockPrisma.photo.count.mockResolvedValue(0);
-      mockPrisma.story.update.mockResolvedValue({ id: 1 });
-
-      await service.update({ ...base, heroImageId: null });
-
-      expect(mockPrisma.photo.count).toHaveBeenCalledWith({
-        where: { id: { in: [] }, user_id: 42 },
-      });
-      expect(updateData()).toMatchObject({ hero_image_id: null });
-    });
-
     it('throws PhotoNotOwnedException and does not update when a photo is not owned', async () => {
-      mockPrisma.photo.count.mockResolvedValue(1);
+      mockTx.photo.count.mockResolvedValue(1);
 
       await expect(
         service.update({ ...base, galleryPhotoIds: [3, 4] }),
       ).rejects.toBeInstanceOf(PhotoNotOwnedException);
-      expect(mockPrisma.story.update).not.toHaveBeenCalled();
+      expect(mockTx.story.update).not.toHaveBeenCalled();
+    });
+
+    it('clears the hero image without an ownership check', async () => {
+      await service.update({ ...base, heroImageId: null });
+
+      expect(mockTx.photo.count).not.toHaveBeenCalled();
+      expect(updateData()).toMatchObject({ hero_image_id: null });
+    });
+
+    it('only locks and updates when no photos are sent', async () => {
+      await service.update({ ...base, title: 'Renamed' });
+
+      expect(mockTx.photo.count).not.toHaveBeenCalled();
+      expect(mockTx.story.findUniqueOrThrow).not.toHaveBeenCalled();
+      expect(mockTx.story.update).toHaveBeenCalledTimes(1);
+    });
+
+    it('rejects a photo already stored in another section', async () => {
+      mockTx.photo.count.mockResolvedValue(1);
+      mockTx.story.findUniqueOrThrow.mockResolvedValue(
+        storedPhotos({ pair: [5] }),
+      );
+
+      await expect(
+        service.update({ ...base, galleryPhotoIds: [5] }),
+      ).rejects.toBeInstanceOf(StoryPhotoDuplicatedException);
+      expect(mockTx.story.update).not.toHaveBeenCalled();
+    });
+
+    it('reports a repeated owned photo as a duplicate, not as not owned', async () => {
+      mockTx.photo.count.mockResolvedValue(1);
+
+      await expect(
+        service.update({ ...base, pairPhotoIds: [5], galleryPhotoIds: [5] }),
+      ).rejects.toBeInstanceOf(StoryPhotoDuplicatedException);
+      expect(mockTx.photo.count).toHaveBeenCalledWith({
+        where: { id: { in: [5] }, user_id: 42 },
+      });
+    });
+
+    it('rejects a new hero that is already a stored carousel photo', async () => {
+      mockTx.photo.count.mockResolvedValue(1);
+      mockTx.story.findUniqueOrThrow.mockResolvedValue(
+        storedPhotos({ carousel: [7] }),
+      );
+
+      await expect(
+        service.update({ ...base, heroImageId: 7 }),
+      ).rejects.toBeInstanceOf(StoryPhotoDuplicatedException);
+    });
+
+    it('lists the duplicated photo ids in the error message', async () => {
+      mockTx.photo.count.mockResolvedValue(2);
+      mockTx.story.findUniqueOrThrow.mockResolvedValue(
+        storedPhotos({ hero: 4, pair: [5, 6] }),
+      );
+
+      await expect(
+        service.update({ ...base, galleryPhotoIds: [4, 5] }),
+      ).rejects.toThrow(
+        'Photos with IDs 4, 5 are used in more than one story section',
+      );
+    });
+
+    it('allows moving a photo between sections in one request', async () => {
+      mockTx.photo.count.mockResolvedValue(1);
+      mockTx.story.findUniqueOrThrow.mockResolvedValue(
+        storedPhotos({ pair: [5] }),
+      );
+
+      await service.update({ ...base, pairPhotoIds: [], galleryPhotoIds: [5] });
+
+      expect(mockTx.story.update).toHaveBeenCalledTimes(1);
+    });
+
+    it('frees the stored hero when it is cleared in the same request', async () => {
+      mockTx.photo.count.mockResolvedValue(1);
+      mockTx.story.findUniqueOrThrow.mockResolvedValue(
+        storedPhotos({ hero: 9 }),
+      );
+
+      await service.update({
+        ...base,
+        heroImageId: null,
+        galleryPhotoIds: [9],
+      });
+
+      expect(mockTx.story.update).toHaveBeenCalledTimes(1);
     });
 
     it('leaves omitted sections untouched', async () => {
-      mockPrisma.photo.count.mockResolvedValue(0);
-      mockPrisma.story.update.mockResolvedValue({ id: 1 });
-
       await service.update({ ...base, title: 'Renamed' });
 
       const data = updateData();
@@ -254,8 +389,7 @@ describe('StoriesService', () => {
     });
 
     it('replaces a sent section, keeping the given order', async () => {
-      mockPrisma.photo.count.mockResolvedValue(2);
-      mockPrisma.story.update.mockResolvedValue({ id: 1 });
+      mockTx.photo.count.mockResolvedValue(2);
 
       await service.update({ ...base, galleryPhotoIds: [8, 3] });
 
@@ -269,8 +403,7 @@ describe('StoriesService', () => {
     });
 
     it('maps carousel captions to their columns', async () => {
-      mockPrisma.photo.count.mockResolvedValue(1);
-      mockPrisma.story.update.mockResolvedValue({ id: 1 });
+      mockTx.photo.count.mockResolvedValue(1);
 
       await service.update({
         ...base,
@@ -294,9 +427,6 @@ describe('StoriesService', () => {
     });
 
     it('clears a section sent as an empty list', async () => {
-      mockPrisma.photo.count.mockResolvedValue(0);
-      mockPrisma.story.update.mockResolvedValue({ id: 1 });
-
       await service.update({ ...base, pairPhotoIds: [] });
 
       expect(updateData().pair_image_stories).toEqual({
