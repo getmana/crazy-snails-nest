@@ -13,7 +13,11 @@ import { AdminTheme, Locale, Role } from '@prisma/client';
 import { getLoggerToken } from 'pino-nestjs';
 import { AuthService, type JwtPayload } from './auth.service';
 import { SharedUsersService } from 'src/modules/shared/users/shared-users.service';
-import { TokenGenerationFailedException } from 'src/exceptions';
+import {
+  InvalidCredentialsException,
+  TokenGenerationFailedException,
+} from 'src/exceptions';
+import { asyncMock } from 'src/testing/jest-mocks';
 
 const SECRETS: Record<string, string> = {
   JWT_SECRET: 'test-access-secret',
@@ -32,6 +36,16 @@ const getSecret = (key: string) => {
 
 const mockConfig = { getOrThrow: jest.fn<(key: string) => string>() };
 const mockLogger = { error: jest.fn() };
+const mockUsers = { validateUser: asyncMock() };
+
+const userRow = {
+  id: 7,
+  email: 'user@example.com',
+  password: '$argon2id$hash',
+  role: Role.editor,
+  locale: Locale.uk,
+  admin_theme: AdminTheme.light,
+};
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -45,7 +59,7 @@ describe('AuthService', () => {
         AuthService,
         { provide: JwtService, useValue: jwtService },
         { provide: ConfigService, useValue: mockConfig },
-        { provide: SharedUsersService, useValue: {} },
+        { provide: SharedUsersService, useValue: mockUsers },
         { provide: getLoggerToken(AuthService.name), useValue: mockLogger },
       ],
     }).compile();
@@ -109,17 +123,48 @@ describe('AuthService', () => {
   });
 
   describe('signin', () => {
-    it('returns tokens and profile fields without the password hash', async () => {
-      const userRow = {
-        id: 7,
-        email: 'user@example.com',
-        password: '$argon2id$hash',
-        role: Role.editor,
-        locale: Locale.uk,
-        admin_theme: AdminTheme.light,
-      };
+    const credentials = {
+      email: 'user@example.com',
+      password: 'Secret-Password-1',
+    };
 
-      const result = await service.signin(userRow);
+    it('checks the credentials with SharedUsersService', async () => {
+      mockUsers.validateUser.mockResolvedValue(userRow);
+
+      await service.signin(credentials);
+
+      expect(mockUsers.validateUser).toHaveBeenCalledWith(
+        credentials.email,
+        credentials.password,
+      );
+    });
+
+    it('issues tokens for the validated user', async () => {
+      mockUsers.validateUser.mockResolvedValue(userRow);
+
+      const { accessToken } = await service.signin(credentials);
+
+      await expect(
+        verify(accessToken, SECRETS.JWT_SECRET),
+      ).resolves.toMatchObject({ sub: userRow.id, email: userRow.email });
+    });
+
+    it('rethrows InvalidCredentialsException without issuing tokens', async () => {
+      const signTokens = jest.spyOn(service, 'getTokens');
+      mockUsers.validateUser.mockRejectedValue(
+        new InvalidCredentialsException('Invalid credentials'),
+      );
+
+      await expect(service.signin(credentials)).rejects.toBeInstanceOf(
+        InvalidCredentialsException,
+      );
+      expect(signTokens).not.toHaveBeenCalled();
+    });
+
+    it('returns tokens and profile fields without the password hash', async () => {
+      mockUsers.validateUser.mockResolvedValue(userRow);
+
+      const result = await service.signin(credentials);
 
       expect(Object.keys(result).sort()).toEqual(
         ['accessToken', 'admin_theme', 'id', 'locale', 'refreshToken'].sort(),

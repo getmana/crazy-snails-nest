@@ -3,7 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { SharedUsersService } from 'src/modules/shared/users/shared-users.service';
 import { UserStrategyPayload } from './strategies';
-import { AdminTheme, Locale } from '@prisma/client';
+import { type SignInPayload } from './dto/auth.dto';
 import { TokenGenerationFailedException } from 'src/exceptions';
 import { PinoLogger, InjectPinoLogger } from 'pino-nestjs';
 
@@ -26,17 +26,12 @@ export class AuthService {
     @InjectPinoLogger(AuthService.name) private logger: PinoLogger,
   ) {}
 
-  async validateUser(email: string, password: string) {
-    return this.userService.validateUser(email, password);
-  }
-
-  async signin(user: {
-    id: number;
-    email: string;
-    locale: Locale;
-    admin_theme: AdminTheme;
-  }) {
-    const { id, email, locale, admin_theme } = user;
+  async signin(credentials: SignInPayload) {
+    const { id, email, locale, admin_theme } =
+      await this.userService.validateUser(
+        credentials.email,
+        credentials.password,
+      );
     const { accessToken, refreshToken } = await this.getTokens({
       id,
       email,

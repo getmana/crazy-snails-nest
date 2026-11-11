@@ -39,12 +39,7 @@ export class AuthController {
   async signin(
     @Body(new ZodValidationPipe(signInSchema)) signInPayload: SignInPayload,
   ) {
-    const user = await this.authService.validateUser(
-      signInPayload.email,
-      signInPayload.password,
-    );
-    const result = await this.authService.signin(user);
-    return result;
+    return this.authService.signin(signInPayload);
   }
 
   @Post('refresh')
