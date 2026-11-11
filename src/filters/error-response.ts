@@ -5,11 +5,10 @@ import { ErrorCodes } from 'src/constants/error-codes';
 import {
   ActiveUserNotFoundException,
   CountryCodesNotFoundException,
-  FileWriteException,
+  InfrastructureException,
   InvalidCredentialsException,
   NoteNotFoundException,
   StoryPhotoDuplicatedException,
-  TokenGenerationFailedException,
   UserAlreadyExistsException,
 } from 'src/exceptions';
 import { AlbumNotFoundException } from 'src/exceptions/album-not-found.exception';
@@ -47,7 +46,6 @@ const DOMAIN_EXCEPTION_STATUS: [DomainExceptionClass, HttpStatus][] = [
   [CountryCodesNotFoundException, HttpStatus.UNPROCESSABLE_ENTITY],
   [UserAlreadyExistsException, HttpStatus.CONFLICT],
   [InvalidCredentialsException, HttpStatus.UNAUTHORIZED],
-  [TokenGenerationFailedException, HttpStatus.INTERNAL_SERVER_ERROR],
 ];
 
 const PRISMA_ERROR_RESPONSES: Record<string, ErrorResponse> = {
@@ -116,10 +114,10 @@ export const toErrorResponse = (exception: unknown): ErrorResponse => {
     return fromDomainException(exception);
   }
 
-  if (exception instanceof FileWriteException) {
+  if (exception instanceof InfrastructureException) {
     return {
       statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
-      code: FileWriteException.code,
+      code: exception.code,
       message: exception.message,
     };
   }
