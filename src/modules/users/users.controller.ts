@@ -2,7 +2,6 @@ import {
   Controller,
   Post,
   Body,
-  UsePipes,
   Delete,
   UseGuards,
   Get,
@@ -39,15 +38,13 @@ export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
   @Post()
-  @UsePipes(new ZodValidationPipe(createUserSchema))
   @ApiOperation({ summary: 'Register a new user' })
   @ApiBody({ schema: zodToApiSchema(createUserSchema) })
   @ApiResponse({ status: 201, description: 'User created' })
   @ApiResponse({ status: 400, description: 'Validation error' })
   @ApiResponse({ status: 409, description: 'Email or username already exists' })
   async signupUser(
-    @Body()
-    userData: CreateUserDto,
+    @Body(new ZodValidationPipe(createUserSchema)) userData: CreateUserDto,
   ): Promise<User> {
     return this.userService.createUser(userData);
   }
