@@ -1,10 +1,17 @@
 import argon2 from 'argon2';
 import { Injectable } from '@nestjs/common';
-import { Role } from '@prisma/client';
+import { Prisma, Role } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto, UpdateUserDto, type User } from './dto/users.dto';
 import { ActiveUserNotFoundException } from 'src/exceptions/active-user-not-found.exception';
 import { UserAlreadyExistsException } from 'src/exceptions/user-already-exists.exception';
+
+const userSelect = {
+  id: true,
+  email: true,
+  username: true,
+  role: true,
+} satisfies Prisma.UserSelect;
 
 @Injectable()
 export class UsersService {
@@ -42,12 +49,7 @@ export class UsersService {
       where: {
         is_active: true,
       },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        role: true,
-      },
+      select: userSelect,
     });
 
     return users;
@@ -59,12 +61,7 @@ export class UsersService {
         id,
         is_active: true,
       },
-      select: {
-        id: true,
-        email: true,
-        username: true,
-        role: true,
-      },
+      select: userSelect,
     });
 
     if (!user) {
