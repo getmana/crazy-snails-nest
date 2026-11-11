@@ -15,6 +15,7 @@ import {
   ActiveUserNotFoundException,
   CountryCodesNotFoundException,
   FileWriteException,
+  InfrastructureException,
   InvalidCredentialsException,
   NoteNotFoundException,
   StoryPhotoDuplicatedException,
@@ -83,7 +84,6 @@ describe('toErrorResponse', () => {
       409,
     ],
     [new InvalidCredentialsException('Invalid credentials'), 401],
-    [new TokenGenerationFailedException('Token generation failed'), 500],
   ])(
     'maps %p to its status with its own code and message',
     (exception, status) => {
@@ -105,13 +105,37 @@ describe('toErrorResponse', () => {
     ).toStrictEqual(INTERNAL);
   });
 
-  it('maps a file write failure to 500 with its code', () => {
+  it.each([
+    [
+      new FileWriteException('Failed to save file'),
+      ErrorCodes.FILE_WRITE_TO_STORAGE_ERROR,
+    ],
+    [
+      new TokenGenerationFailedException('Token generation failed'),
+      ErrorCodes.TOKEN_GENERATION_FAILED,
+    ],
+  ])(
+    'maps infrastructure failure %p to 500 with its code',
+    (exception, code) => {
+      expect(toErrorResponse(exception)).toStrictEqual({
+        statusCode: 500,
+        code,
+        message: exception.message,
+      });
+    },
+  );
+
+  it('maps any infrastructure exception to 500 without registration', () => {
+    class MailSendFailedException extends InfrastructureException {
+      readonly code = 'MAIL_SEND_FAILED';
+    }
+
     expect(
-      toErrorResponse(new FileWriteException('Failed to save file')),
+      toErrorResponse(new MailSendFailedException('Failed to send mail')),
     ).toStrictEqual({
       statusCode: 500,
-      code: ErrorCodes.FILE_WRITE_TO_STORAGE_ERROR,
-      message: 'Failed to save file',
+      code: 'MAIL_SEND_FAILED',
+      message: 'Failed to send mail',
     });
   });
 

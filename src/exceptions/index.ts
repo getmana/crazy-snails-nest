@@ -2,6 +2,7 @@ export { TokenGenerationFailedException } from './token-generation-failed.except
 export { ActiveUserNotFoundException } from './active-user-not-found.exception';
 export { CountryCodesNotFoundException } from './country-codes-not-found.exception';
 export { FileWriteException } from './file-write.exception';
+export { InfrastructureException } from './infrastructure.exception';
 export { UserAlreadyExistsException } from './user-already-exists.exception';
 export { NoteNotFoundException } from './note-not-found.exception';
 export { InvalidCredentialsException } from './invalid-credentials.exception';
