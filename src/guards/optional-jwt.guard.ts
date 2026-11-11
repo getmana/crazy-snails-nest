@@ -10,9 +10,9 @@ import { Request } from 'express';
 @Injectable()
 export class OptionalJwtGuard extends AuthGuard('jwt') {
   handleRequest<TUser = UserStrategyPayload>(
-    err: any,
-    user: any,
-    info: any,
+    err: Error | null,
+    user: unknown,
+    info: unknown,
     context: ExecutionContext,
   ): TUser {
     if (err) throw err;
