@@ -1,3 +1,9 @@
+export { DomainException } from './domain.exception';
+export { AlbumNotFoundException } from './album-not-found.exception';
+export { StoryNotFoundException } from './story-not-found.exception';
+export { EntityNotPublished } from './entity-not-published.exception';
+export { PhotoNotOwnedException } from './photo-not-owned.exception';
+export { PreviewPhotoInvalidException } from './preview-photo-invalid.exception';
 export { TokenGenerationFailedException } from './token-generation-failed.exception';
 export { ActiveUserNotFoundException } from './active-user-not-found.exception';
 export { CountryCodesNotFoundException } from './country-codes-not-found.exception';

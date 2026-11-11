@@ -10,7 +10,7 @@ import { ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
 import { RolesGuard } from './roles.guard';
-import { ErrorCodes } from 'src/constants/error-codes';
+import { ErrorCodes } from 'src/constants';
 import { createHttpContext } from 'src/testing/http-context';
 
 const editor = { id: 7, email: 'editor@example.com', role: Role.editor };

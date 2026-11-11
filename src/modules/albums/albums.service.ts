@@ -1,17 +1,18 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateAlbumDto } from './dto/create-album.dto';
-import { ActivityType } from '@prisma/client';
-import { AlbumNotFoundException } from 'src/exceptions/album-not-found.exception';
-import { EntityNotPublished } from 'src/exceptions/entity-not-published.exception';
-import { ErrorCodes } from 'src/constants/error-codes';
+import { ActivityType, Prisma } from '@prisma/client';
+import {
+  AlbumNotFoundException,
+  EntityNotPublished,
+  PhotoNotOwnedException,
+  PreviewPhotoInvalidException,
+} from 'src/exceptions';
+import { ErrorCodes } from 'src/constants';
 import { buildPaginationArgs, findManyPaginated, toJsonInput } from 'src/utils';
-import { UserStrategyPayload } from '../auth/strategies';
+import { UserStrategyPayload } from 'src/modules/auth/strategies';
 import { UpdateAlbumDto } from './dto/update-album.dto';
-import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception';
-import { PreviewPhotoInvalidException } from 'src/exceptions/preview-photo-invalid.exception';
-import { Prisma } from '@prisma/client';
-import { SharedUsersService } from '../shared/users/shared-users.service';
+import { SharedUsersService } from 'src/modules/shared/users/shared-users.service';
 import { type GetUserAlbumsDto } from 'src/dto';
 
 const albumDetailIncludes = (albumId: number): Prisma.AlbumInclude => ({

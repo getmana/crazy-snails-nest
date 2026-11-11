@@ -1,7 +1,7 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { ZodError } from 'zod';
-import { ErrorCodes } from 'src/constants/error-codes';
+import { ErrorCodes } from 'src/constants';
 import {
   ActiveUserNotFoundException,
   CountryCodesNotFoundException,
@@ -10,13 +10,13 @@ import {
   NoteNotFoundException,
   StoryPhotoDuplicatedException,
   UserAlreadyExistsException,
+  AlbumNotFoundException,
+  DomainException,
+  EntityNotPublished,
+  PhotoNotOwnedException,
+  PreviewPhotoInvalidException,
+  StoryNotFoundException,
 } from 'src/exceptions';
-import { AlbumNotFoundException } from 'src/exceptions/album-not-found.exception';
-import { DomainException } from 'src/exceptions/domain.exception';
-import { EntityNotPublished } from 'src/exceptions/entity-not-published.exception';
-import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception';
-import { PreviewPhotoInvalidException } from 'src/exceptions/preview-photo-invalid.exception';
-import { StoryNotFoundException } from 'src/exceptions/story-not-found.exception';
 
 export type ErrorResponse = {
   statusCode: number;

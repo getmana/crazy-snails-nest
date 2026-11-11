@@ -26,7 +26,7 @@ import {
 } from 'src/constants';
 import { ImageExtensionValidator } from 'src/pipes';
 import { CurrentUser } from 'src/decorators';
-import { type UserStrategyPayload } from '../auth/strategies';
+import { type UserStrategyPayload } from 'src/modules/auth/strategies';
 import { CreatePhotoDto } from './dto/create-photo.dto';
 
 @ApiTags('photos')

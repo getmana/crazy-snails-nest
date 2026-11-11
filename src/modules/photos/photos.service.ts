@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { StorageService } from 'src/modules/shared/storage/storage.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreatePhotoDto } from './dto/create-photo.dto';
 
 @Injectable()

@@ -10,9 +10,11 @@ import { Test } from '@nestjs/testing';
 import argon2 from 'argon2';
 import { AdminTheme, Locale, Role } from '@prisma/client';
 import { UsersService } from './users.service';
-import { PrismaService } from '../prisma/prisma.service';
-import { ActiveUserNotFoundException } from 'src/exceptions/active-user-not-found.exception';
-import { UserAlreadyExistsException } from 'src/exceptions/user-already-exists.exception';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
+import {
+  ActiveUserNotFoundException,
+  UserAlreadyExistsException,
+} from 'src/exceptions';
 import { asyncMock } from 'src/testing/jest-mocks';
 
 const PASSWORD = 'Correct-Horse-1';

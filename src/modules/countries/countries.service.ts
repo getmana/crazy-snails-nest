@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
-import { CountryCodesNotFoundException } from 'src/exceptions/country-codes-not-found.exception';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { CountryCodesNotFoundException } from 'src/exceptions';
 
 @Injectable()
 export class CountriesService {

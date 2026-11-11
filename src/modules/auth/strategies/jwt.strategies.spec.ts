@@ -13,7 +13,7 @@ import { Role } from '@prisma/client';
 import { JwtStrategy } from './jwt.strategy';
 import { JwtRefreshStrategy } from './jwt-refresh.strategy';
 import { SharedUsersService } from 'src/modules/shared/users/shared-users.service';
-import { ErrorCodes } from 'src/constants/error-codes';
+import { ErrorCodes } from 'src/constants';
 import { asyncMock } from 'src/testing/jest-mocks';
 
 const mockUsers = { findActiveByEmail: asyncMock() };

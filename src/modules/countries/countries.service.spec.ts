@@ -8,7 +8,7 @@ import {
 } from '@jest/globals';
 import { Test } from '@nestjs/testing';
 import { CountriesService } from './countries.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CountryCodesNotFoundException } from 'src/exceptions';
 import { asyncMock } from 'src/testing/jest-mocks';
 

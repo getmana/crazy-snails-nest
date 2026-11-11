@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateStoryDto } from './dto/create-story.dto';
-import { EntityNotPublished } from 'src/exceptions/entity-not-published.exception';
-import { StoryNotFoundException } from 'src/exceptions/story-not-found.exception';
-import { ErrorCodes } from 'src/constants/error-codes';
+import {
+  EntityNotPublished,
+  StoryNotFoundException,
+  PhotoNotOwnedException,
+  StoryPhotoDuplicatedException,
+} from 'src/exceptions';
+import { ErrorCodes } from 'src/constants';
 import { UpdateStoryDto } from './dto/update-story.dto';
-import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception';
-import { StoryPhotoDuplicatedException } from 'src/exceptions';
 import {
   type RequestedStoryPhotos,
   findDuplicatedIds,
@@ -17,8 +19,8 @@ import {
 } from './utils';
 import { Prisma } from '@prisma/client';
 import { buildPaginationArgs, findManyPaginated, toJsonInput } from 'src/utils';
-import { UserStrategyPayload } from '../auth/strategies';
-import { SharedUsersService } from '../shared/users/shared-users.service';
+import { UserStrategyPayload } from 'src/modules/auth/strategies';
+import { SharedUsersService } from 'src/modules/shared/users/shared-users.service';
 import { type GetUserStoriesDto } from 'src/dto';
 
 const storyPhotoIncludes = {

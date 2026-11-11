@@ -10,7 +10,7 @@ import {
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { toErrorResponse } from './error-response';
-import { ErrorCodes } from 'src/constants/error-codes';
+import { ErrorCodes } from 'src/constants';
 import {
   ActiveUserNotFoundException,
   CountryCodesNotFoundException,
@@ -21,13 +21,13 @@ import {
   StoryPhotoDuplicatedException,
   TokenGenerationFailedException,
   UserAlreadyExistsException,
+  AlbumNotFoundException,
+  StoryNotFoundException,
+  EntityNotPublished,
+  PhotoNotOwnedException,
+  PreviewPhotoInvalidException,
+  DomainException,
 } from 'src/exceptions';
-import { AlbumNotFoundException } from 'src/exceptions/album-not-found.exception';
-import { StoryNotFoundException } from 'src/exceptions/story-not-found.exception';
-import { EntityNotPublished } from 'src/exceptions/entity-not-published.exception';
-import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception';
-import { PreviewPhotoInvalidException } from 'src/exceptions/preview-photo-invalid.exception';
-import { DomainException } from 'src/exceptions/domain.exception';
 
 const INTERNAL = {
   statusCode: 500,

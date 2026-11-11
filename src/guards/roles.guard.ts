@@ -5,7 +5,7 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ErrorCodes } from 'src/constants/error-codes';
+import { ErrorCodes } from 'src/constants';
 import { ROLES_KEY } from 'src/decorators';
 import { UserStrategyPayload } from 'src/modules/auth/strategies';
 

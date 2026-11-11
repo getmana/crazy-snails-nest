@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TiptapDocumentSchema } from 'src/dto/tiptap.dto';
+import { TiptapDocumentSchema } from 'src/dto';
 import { type OptionalProperty } from 'src/utils';
 
 export const UpdateNoteSchema = z.object({

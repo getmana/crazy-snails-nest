@@ -9,14 +9,16 @@ import {
 import { Test } from '@nestjs/testing';
 import { ActivityType, Role } from '@prisma/client';
 import { AlbumsService } from './albums.service';
-import { PrismaService } from '../prisma/prisma.service';
-import { SharedUsersService } from '../shared/users/shared-users.service';
-import { AlbumNotFoundException } from 'src/exceptions/album-not-found.exception';
-import { EntityNotPublished } from 'src/exceptions/entity-not-published.exception';
-import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception';
-import { PreviewPhotoInvalidException } from 'src/exceptions/preview-photo-invalid.exception';
-import { ActiveUserNotFoundException } from 'src/exceptions';
-import { type UserStrategyPayload } from '../auth/strategies';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { SharedUsersService } from 'src/modules/shared/users/shared-users.service';
+import {
+  AlbumNotFoundException,
+  EntityNotPublished,
+  PhotoNotOwnedException,
+  PreviewPhotoInvalidException,
+  ActiveUserNotFoundException,
+} from 'src/exceptions';
+import { type UserStrategyPayload } from 'src/modules/auth/strategies';
 import { asyncMock } from 'src/testing/jest-mocks';
 
 const mockTx = {

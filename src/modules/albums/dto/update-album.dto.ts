@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TiptapDocumentSchema } from 'src/dto/tiptap.dto';
+import { TiptapDocumentSchema } from 'src/dto';
 import { prismaEnumValues } from 'src/utils';
 import { ActivityType } from '@prisma/client';
 
