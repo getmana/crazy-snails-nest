@@ -29,7 +29,7 @@ This is the backend, built as a hands-on learning project to grow NestJS and API
 - **argon2** — password hashing
 - **pino** (`pino-nestjs`) — structured logging
 - **Multer** — file upload (memory storage)
-- **Jest** — unit tests; 
+- **Jest** — unit tests
 - **GitHub Actions** — CI
 
 ## Architecture highlights
@@ -111,7 +111,7 @@ npm run start:dev
 
 ## Testing
 
-The suite contains **unit tests only**: 13 suites, 120 tests. They need no database or running server, because Prisma and other collaborators are mocked through Nest's testing module.
+The suite contains **unit tests only**. They need no database or running server, because Prisma and other collaborators are mocked through Nest's testing module.
 
 What's covered:
 - **Services**: albums, stories, users, photos, countries, auth, shared users and storage. The tests cover business rules and their failure paths:
