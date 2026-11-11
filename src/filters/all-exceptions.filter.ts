@@ -1,6 +1,6 @@
 import { ArgumentsHost, Catch, ExceptionFilter, Logger } from '@nestjs/common';
 import { Response } from 'express';
-import { ErrorCodes } from 'src/constants/error-codes';
+import { ErrorCodes } from 'src/constants';
 import { toErrorResponse } from './error-response';
 
 @Catch()

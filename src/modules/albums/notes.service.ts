@@ -1,15 +1,17 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
 import {
   GetNoteDto,
   type NoteContextDto,
   UpdateNoteDto,
 } from './dto/update-note.dto';
 import { toJsonInput } from 'src/utils';
-import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception';
-import { EntityNotPublished } from 'src/exceptions/entity-not-published.exception';
-import { ErrorCodes } from 'src/constants/error-codes';
-import { NoteNotFoundException } from 'src/exceptions';
+import {
+  PhotoNotOwnedException,
+  EntityNotPublished,
+  NoteNotFoundException,
+} from 'src/exceptions';
+import { ErrorCodes } from 'src/constants';
 
 @Injectable()
 export class NotesService {

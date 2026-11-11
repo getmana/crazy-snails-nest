@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { TiptapDocumentSchema } from 'src/dto/tiptap.dto';
+import { TiptapDocumentSchema } from 'src/dto';
 
 export const CarouselPhoto = z.object({
   photoId: z.number().int(),

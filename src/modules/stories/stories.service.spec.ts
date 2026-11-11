@@ -9,17 +9,17 @@ import {
 import { Test } from '@nestjs/testing';
 import { Role } from '@prisma/client';
 import { StoriesService } from './stories.service';
-import { PrismaService } from '../prisma/prisma.service';
-import { SharedUsersService } from '../shared/users/shared-users.service';
-import { StoryNotFoundException } from 'src/exceptions/story-not-found.exception';
-import { EntityNotPublished } from 'src/exceptions/entity-not-published.exception';
-import { PhotoNotOwnedException } from 'src/exceptions/photo-not-owned.exception';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
+import { SharedUsersService } from 'src/modules/shared/users/shared-users.service';
 import {
+  StoryNotFoundException,
+  EntityNotPublished,
+  PhotoNotOwnedException,
   ActiveUserNotFoundException,
   StoryPhotoDuplicatedException,
 } from 'src/exceptions';
-import { ErrorCodes } from 'src/constants/error-codes';
-import { type UserStrategyPayload } from '../auth/strategies';
+import { ErrorCodes } from 'src/constants';
+import { type UserStrategyPayload } from 'src/modules/auth/strategies';
 import { asyncMock } from 'src/testing/jest-mocks';
 
 const mockTx = {

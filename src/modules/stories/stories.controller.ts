@@ -23,7 +23,7 @@ import {
   CurrentUser,
   ApiPaginationQuery,
 } from 'src/decorators';
-import { type UserStrategyPayload } from '../auth/strategies';
+import { type UserStrategyPayload } from 'src/modules/auth/strategies';
 import { StoriesService } from './stories.service';
 import {
   ApiTags,

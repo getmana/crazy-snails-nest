@@ -1,3 +1,5 @@
+export { ErrorCodes } from './error-codes';
+
 export const ALLOWED_IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 export const ALLOWED_IMAGE_TYPES_REGEXP = /(jpg|jpeg|png|webp)$/;
 export const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];

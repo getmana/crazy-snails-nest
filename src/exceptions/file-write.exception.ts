@@ -1,4 +1,4 @@
-import { ErrorCodes } from 'src/constants/error-codes';
+import { ErrorCodes } from 'src/constants';
 import { InfrastructureException } from './infrastructure.exception';
 
 export class FileWriteException extends InfrastructureException {

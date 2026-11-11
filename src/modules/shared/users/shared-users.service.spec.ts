@@ -15,7 +15,7 @@ import {
   ActiveUserNotFoundException,
   InvalidCredentialsException,
 } from 'src/exceptions';
-import { ErrorCodes } from 'src/constants/error-codes';
+import { ErrorCodes } from 'src/constants';
 import { asyncMock } from 'src/testing/jest-mocks';
 
 const PASSWORD = 'Correct-Horse-1';

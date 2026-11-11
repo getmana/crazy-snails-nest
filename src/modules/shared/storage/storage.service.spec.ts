@@ -11,7 +11,7 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import { getLoggerToken } from 'pino-nestjs';
 import { StorageService } from './storage.service';
-import { FileWriteException } from 'src/exceptions/file-write.exception';
+import { FileWriteException } from 'src/exceptions';
 import { FILE_UPLOAD_URL } from 'src/constants';
 
 const NOW = new Date('2026-10-14T10:00:00Z');

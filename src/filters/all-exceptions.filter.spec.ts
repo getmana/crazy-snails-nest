@@ -1,8 +1,8 @@
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
 import { Logger } from '@nestjs/common';
 import { AllExceptionsFilter } from './all-exceptions.filter';
-import { ErrorCodes } from 'src/constants/error-codes';
-import { AlbumNotFoundException } from 'src/exceptions/album-not-found.exception';
+import { ErrorCodes } from 'src/constants';
+import { AlbumNotFoundException } from 'src/exceptions';
 import { createHttpContext } from 'src/testing/http-context';
 
 const createResponse = () => {

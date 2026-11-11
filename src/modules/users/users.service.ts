@@ -1,10 +1,12 @@
 import argon2 from 'argon2';
 import { Injectable } from '@nestjs/common';
 import { Prisma, Role } from '@prisma/client';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateUserDto, UpdateUserDto, type User } from './dto/users.dto';
-import { ActiveUserNotFoundException } from 'src/exceptions/active-user-not-found.exception';
-import { UserAlreadyExistsException } from 'src/exceptions/user-already-exists.exception';
+import {
+  ActiveUserNotFoundException,
+  UserAlreadyExistsException,
+} from 'src/exceptions';
 
 const userSelect = {
   id: true,

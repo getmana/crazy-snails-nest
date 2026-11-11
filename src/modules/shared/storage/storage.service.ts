@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { extname, join } from 'path';
 import { FILE_UPLOAD_URL } from 'src/constants';
 import { promises as fs } from 'fs';
-import { FileWriteException } from 'src/exceptions/file-write.exception';
+import { FileWriteException } from 'src/exceptions';
 import { PinoLogger, InjectPinoLogger } from 'pino-nestjs';
 
 @Injectable()

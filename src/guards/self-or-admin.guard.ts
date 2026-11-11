@@ -7,7 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 import { Role } from '@prisma/client';
 import { UserStrategyPayload } from 'src/modules/auth/strategies';
-import { ErrorCodes } from 'src/constants/error-codes';
+import { ErrorCodes } from 'src/constants';
 
 interface RequestWithUser extends Request {
   user: UserStrategyPayload;

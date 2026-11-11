@@ -8,9 +8,9 @@ import {
 } from '@jest/globals';
 import { Test } from '@nestjs/testing';
 import { PhotosService } from './photos.service';
-import { PrismaService } from '../prisma/prisma.service';
+import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { StorageService } from 'src/modules/shared/storage/storage.service';
-import { FileWriteException } from 'src/exceptions/file-write.exception';
+import { FileWriteException } from 'src/exceptions';
 import { asyncMock } from 'src/testing/jest-mocks';
 
 const KEY = '2026-10-14/photo-key.png';

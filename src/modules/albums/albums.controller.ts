@@ -33,7 +33,7 @@ import {
   CurrentUser,
   ApiPaginationQuery,
 } from 'src/decorators';
-import { type UserStrategyPayload } from '../auth/strategies';
+import { type UserStrategyPayload } from 'src/modules/auth/strategies';
 import { zodToApiSchema } from 'src/utils';
 import { OptionalJwtGuard } from 'src/guards';
 import { type PaginationPayload, PaginationSchema } from 'src/dto';

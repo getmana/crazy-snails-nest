@@ -26,10 +26,9 @@ import {
   updateUserSchema,
 } from './dto/users.dto';
 import { ZodValidationPipe } from 'src/pipes';
-import { RolesGuard } from 'src/guards/roles.guard';
+import { RolesGuard, SelfOrAdminGuard } from 'src/guards';
 import { Roles } from 'src/decorators';
 import { AuthGuard } from '@nestjs/passport';
-import { SelfOrAdminGuard } from 'src/guards';
 import { zodToApiSchema } from 'src/utils';
 
 @ApiTags('users')

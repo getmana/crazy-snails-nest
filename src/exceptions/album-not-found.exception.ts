@@ -1,4 +1,4 @@
-import { ErrorCodes } from 'src/constants/error-codes';
+import { ErrorCodes } from 'src/constants';
 import { DomainException } from './domain.exception';
 
 export class AlbumNotFoundException extends DomainException {
