@@ -106,7 +106,7 @@ If anything throws along the way, `AllExceptionsFilter` produces the response.
 | Pagination | `PaginationSchema`: `cursor` coerced to a positive int; `limit` coerced, between 1 and 100, defaulting to 20 | `src/dto/pagination.dto.ts` |
 | Cross-field rules (within one request) | `.refine` on the schema: photo ids unique and the preview photo among them (`update-album.dto.ts`); photo ids unique across all story sections (`update-story.dto.ts`); `titleEn` or `titleUk` required (`create-album.dto.ts`, `create-story.dto.ts`) | listed |
 | Rich text | `TiptapDocumentSchema`: `{ type: 'doc', content: unknown[] }`, with the inferred type exported as `TiptapDocument` | `src/dto/tiptap.dto.ts` |
-| Uploaded file | `ParseFilePipe` with three validators: `MaxFileSizeValidator` (10 MB), `FileTypeValidator`, and `ImageExtensionValidator` (`.jpg`, `.jpeg`, `.png`, `.webp`, case-insensitive) | `src/modules/photos/photos.controller.ts`, `src/constants/index.ts` (`ALLOWED_IMAGE_*`, `MAX_IMAGE_SIZE`), `src/pipes/image-extension.validator.ts` |
+| Uploaded file | Size: Multer's `limits.fileSize` (10 MB), set on the route's `FileInterceptor('file', …)`; Multer stops reading at the limit, and the request gets 413 `PAYLOAD_TOO_LARGE`. Type: `ParseFilePipe` with `FileTypeValidator` and `ImageExtensionValidator` (`.jpg`, `.jpeg`, `.png`, `.webp`, case-insensitive), failing with 400 `BAD_REQUEST` | `src/modules/photos/photos.controller.ts`, `src/constants/index.ts` (`ALLOWED_IMAGE_*`, `MAX_IMAGE_SIZE`), `src/pipes/image-extension.validator.ts` |
 | Business rules | Checked in services: photo ownership (`AlbumsService.update`, `StoriesService.assertPhotosOwned`); story photo uniqueness against the **stored** sections (`StoriesService.assertNoDuplicatedPhotos`); note ownership (`NotesService.verifyOwnership`); active user (`SharedUsersService.assertActiveUser`); email/username uniqueness (`UsersService.findExistingUser`) | listed |
 
 - Zod's `parse` throws `ZodError` on invalid input, which the error mapper turns into 400 `VALIDATION_FAILED` (§6).
@@ -144,17 +144,23 @@ All evidence in this table is in `src/filters/error-response.ts`:
 | Any `InfrastructureException` (`FileWriteException`, `TokenGenerationFailedException`) | 500 | the exception's `code` (`FILE_WRITE_TO_STORAGE_ERROR`, `TOKEN_GENERATION_FAILED`) | the exception's message | the `InfrastructureException` branch of `toErrorResponse` |
 | Prisma `P2025` / `P2002` | 404 / 409 | `RECORD_NOT_FOUND` / `UNIQUE_CONSTRAINT_VIOLATION` | fixed text | `PRISMA_ERROR_RESPONSES` |
 | Any other Prisma known-request error | 500 | `INTERNAL_SERVER_ERROR` | `'Internal server error'` | the Prisma branch of `toErrorResponse` |
-| `HttpException` (guards, strategies, `ParseIntPipe`, `ParseFilePipe`, unknown routes, Multer limits) | `getStatus()` | the response's `code` if it carries one, otherwise the status name from `HttpStatus` (e.g. `UNAUTHORIZED`, `NOT_FOUND`, `PAYLOAD_TOO_LARGE`) | the response's `message`; an array is joined with `'. '` | `fromHttpException` |
+| `HttpException` (guards, strategies, `ParseIntPipe`, `ParseFilePipe`, malformed JSON bodies, unknown routes, Multer limits) | `getStatus()` | the response's `code` if it carries a public one; otherwise the status name if it's in `HTTP_STATUS_ERROR_CODES` (`BAD_REQUEST`, `UNAUTHORIZED`, `NOT_FOUND`, `PAYLOAD_TOO_LARGE`); otherwise `HTTP_ERROR` | the response's `message`; an array is joined with `'. '` | `fromHttpException`, `isPublicErrorCode` |
 | Anything else | 500 | `INTERNAL_SERVER_ERROR` | `'Internal server error'` | `INTERNAL_ERROR_RESPONSE` |
 
 - **Statuses for domain exceptions** live in the mapper's registry (`DOMAIN_EXCEPTION_STATUS`), not on the exception classes. The registry is searched with `instanceof`, so subclasses inherit their parent's status.
 - **Infrastructure exceptions** are matched by their base class in a single branch, so a new subclass needs only a code. Their message is returned to the client unchanged; today both messages are fixed strings set where the exception is thrown.
-- **The status-name fallback** uses the reverse mapping of Nest's numeric `HttpStatus` enum (`HttpStatus[statusCode]` in `fromHttpException`). For example, `HttpStatus[401]` is `'UNAUTHORIZED'` (library behaviour).
-- **Multer limit errors** are converted to `PayloadTooLargeException` by `@nestjs/platform-express` (library behaviour: `node_modules/@nestjs/platform-express/multer/multer/multer.utils.js`, the `LIMIT_FILE_SIZE` case), so they reach the `HttpException` branch.
-- **Logging.** The filter logs only responses whose code is `INTERNAL_SERVER_ERROR` (`AllExceptionsFilter.catch`): unknown errors, unregistered domain exceptions and unhandled Prisma codes. Infrastructure exceptions are logged with the underlying error where they're thrown (`auth.service.ts`, `storage.service.ts`), not by the filter.
+- **The status-name fallback** uses the reverse mapping of Nest's numeric `HttpStatus` enum (`HttpStatus[statusCode]` in `fromHttpException`). For example, `HttpStatus[401]` is `'UNAUTHORIZED'` (library behaviour). Only the names in `HTTP_STATUS_ERROR_CODES` are sent; any other status (e.g. 403 from a guard that returns `false`, or 405) keeps its HTTP status and gets the code `HTTP_ERROR`.
+- **Codes are typed.** `ErrorResponse.code` is `PublicErrorCode`, and both exception bases type `code` as `ErrorCode`, so every branch except `fromHttpException` is checked at compile time. `fromHttpException` narrows at runtime with `isPublicErrorCode`, because its codes come from Nest, guards and Passport.
+- **Multer limit errors** are converted to `PayloadTooLargeException` by `@nestjs/platform-express` (library behaviour: `node_modules/@nestjs/platform-express/multer/multer/multer.utils.js`, the `LIMIT_FILE_SIZE` case), so they reach the `HttpException` branch and are sent as 413 `PAYLOAD_TOO_LARGE`.
+- **Logging.** The filter logs an error for responses whose code is `INTERNAL_SERVER_ERROR` (`AllExceptionsFilter.catch`): unknown errors, unregistered domain exceptions and unhandled Prisma codes. It logs a warning for `HTTP_ERROR`, so an unlisted status shows up in the logs. Infrastructure exceptions are logged with the underlying error where they're thrown (`auth.service.ts`, `storage.service.ts`), not by the filter.
 - **List endpoints:** `findManyPaginated` converts a `P2025` from the list query into an empty page `{ items: [], nextCursor: null }` (`src/utils/paginate.ts`).
 
-Error codes are defined centrally in `src/constants/error-codes.ts` and exported as `ErrorCodes` from the `src/constants` barrel. The status-name codes (e.g. `BAD_REQUEST`) are not listed there; they come from `HttpStatus`.
+Error codes are defined centrally in `src/constants/error-codes.ts`, exported from the `src/constants` barrel:
+- `ErrorCodes`: the application codes (type `ErrorCode`);
+- `HTTP_STATUS_ERROR_CODES`: the `HttpStatus` names the mapper may send, checked against `HttpStatus` with `satisfies`;
+- `PUBLIC_ERROR_CODES` (type `PublicErrorCode`): both lists combined, i.e. every code a client can receive. The frontend mirrors this list by hand.
+
+`COUNTRY_CODES_NOT_FOUND` is in the list but can't occur today: its only thrower, `CountriesService.findIdsByCodes`, has no caller.
 
 ## 7. Module dependencies
 

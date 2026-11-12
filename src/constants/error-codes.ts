@@ -1,8 +1,9 @@
+import type { HttpStatus } from '@nestjs/common';
+
 export const ErrorCodes = {
   COUNTRY_CODES_NOT_FOUND: 'COUNTRY_CODES_NOT_FOUND',
   INTERNAL_SERVER_ERROR: 'INTERNAL_SERVER_ERROR',
   INSUFFICIENT_PERMISSIONS: 'INSUFFICIENT_PERMISSIONS',
-  INVALID_REFRESH_TOKEN: 'INVALID_REFRESH_TOKEN',
   TOKEN_GENERATION_FAILED: 'TOKEN_GENERATION_FAILED',
   AUTH_USER_NOT_FOUND: 'AUTH_USER_NOT_FOUND',
   INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
@@ -18,4 +19,24 @@ export const ErrorCodes = {
   NOTE_NOT_FOUND: 'NOTE_NOT_FOUND',
   VALIDATION_FAILED: 'VALIDATION_FAILED',
   STORY_PHOTO_DUPLICATED: 'STORY_PHOTO_DUPLICATED',
+  HTTP_ERROR: 'HTTP_ERROR',
 } as const;
+
+export type ErrorCode = (typeof ErrorCodes)[keyof typeof ErrorCodes];
+
+export const HTTP_STATUS_ERROR_CODES = [
+  'BAD_REQUEST',
+  'UNAUTHORIZED',
+  'NOT_FOUND',
+  'PAYLOAD_TOO_LARGE',
+] as const satisfies readonly (keyof typeof HttpStatus)[];
+
+export type PublicErrorCode =
+  | ErrorCode
+  | (typeof HTTP_STATUS_ERROR_CODES)[number];
+
+// The frontend mirrors this list manually until OpenApi client is generated
+export const PUBLIC_ERROR_CODES: readonly PublicErrorCode[] = [
+  ...Object.values(ErrorCodes),
+  ...HTTP_STATUS_ERROR_CODES,
+];

@@ -17,6 +17,14 @@ export class AllExceptionsFilter implements ExceptionFilter {
       );
     }
 
+    if (body.code === ErrorCodes.HTTP_ERROR) {
+      this.logger.warn(
+        `Unlisted HTTP status ${body.statusCode} sent as ${ErrorCodes.HTTP_ERROR}: ${
+          exception instanceof Error ? exception.message : String(exception)
+        }`,
+      );
+    }
+
     host
       .switchToHttp()
       .getResponse<Response>()
