@@ -81,7 +81,7 @@ Every error response has the same body, and its `statusCode` always matches the 
 }
 ```
 
-- **`code`** is the stable, machine-readable part, meant for frontend logic and translations. Application codes are listed in `src/constants/error-codes.ts`. Errors without an application code, such as a malformed path parameter or an unknown route, use the HTTP status name (`BAD_REQUEST`, `NOT_FOUND`, `UNAUTHORIZED`, …).
+- **`code`** is the stable, machine-readable part, meant for frontend logic and translations. Every code a client can receive is listed in `PUBLIC_ERROR_CODES` (`src/constants/error-codes.ts`), and the response type allows no other. Errors without an application code, such as a malformed path parameter, malformed JSON or an unknown route, use the HTTP status name: `BAD_REQUEST`, `UNAUTHORIZED`, `NOT_FOUND` or `PAYLOAD_TOO_LARGE` (a photo over 10 MB). Any other status the API doesn't expect keeps its HTTP status and returns `HTTP_ERROR`.
 - **`message`** is a human-readable description. For validation errors (`400 VALIDATION_FAILED`), it joins every failed rule into one sentence list.
 - **Unexpected errors** always return `500 INTERNAL_SERVER_ERROR` with a generic message; the details are logged on the server only.
 

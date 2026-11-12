@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, jest } from '@jest/globals';
-import { Logger } from '@nestjs/common';
+import { ForbiddenException, Logger, NotFoundException } from '@nestjs/common';
 import { AllExceptionsFilter } from './all-exceptions.filter';
 import { ErrorCodes } from 'src/constants';
 import { AlbumNotFoundException } from 'src/exceptions';
@@ -57,6 +57,37 @@ describe('AllExceptionsFilter', () => {
       createHttpContext({}, createResponse()),
     );
 
+    expect(logError).not.toHaveBeenCalled();
+  });
+
+  it('warns when an unlisted HTTP status is sent as HTTP_ERROR', () => {
+    const logWarn = jest
+      .spyOn(Logger.prototype, 'warn')
+      .mockImplementation(() => undefined);
+    const response = createResponse();
+
+    filter.catch(new ForbiddenException(), createHttpContext({}, response));
+
+    expect(response.json).toHaveBeenCalledWith(
+      expect.objectContaining({ statusCode: 403, code: ErrorCodes.HTTP_ERROR }),
+    );
+    expect(logWarn).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not log a listed HTTP status', () => {
+    const logWarn = jest
+      .spyOn(Logger.prototype, 'warn')
+      .mockImplementation(() => undefined);
+    const logError = jest
+      .spyOn(Logger.prototype, 'error')
+      .mockImplementation(() => undefined);
+
+    filter.catch(
+      new NotFoundException('Cannot GET /nope'),
+      createHttpContext({}, createResponse()),
+    );
+
+    expect(logWarn).not.toHaveBeenCalled();
     expect(logError).not.toHaveBeenCalled();
   });
 });

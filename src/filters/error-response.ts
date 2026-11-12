@@ -1,7 +1,11 @@
 import { HttpException, HttpStatus } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { ZodError } from 'zod';
-import { ErrorCodes } from 'src/constants';
+import {
+  ErrorCodes,
+  PUBLIC_ERROR_CODES,
+  type PublicErrorCode,
+} from 'src/constants';
 import {
   ActiveUserNotFoundException,
   CountryCodesNotFoundException,
@@ -20,7 +24,7 @@ import {
 
 export type ErrorResponse = {
   statusCode: number;
-  code: string;
+  code: PublicErrorCode;
   message: string;
 };
 
@@ -61,6 +65,9 @@ const PRISMA_ERROR_RESPONSES: Record<string, ErrorResponse> = {
   },
 };
 
+const isPublicErrorCode = (value: unknown): value is PublicErrorCode =>
+  PUBLIC_ERROR_CODES.includes(value as PublicErrorCode);
+
 const joinMessages = (message: unknown, fallback: string): string => {
   if (Array.isArray(message))
     return message.map(String).join(MESSAGE_SEPARATOR);
@@ -82,8 +89,10 @@ const fromDomainException = (exception: DomainException): ErrorResponse => {
 
 const fromHttpException = (exception: HttpException): ErrorResponse => {
   const statusCode = exception.getStatus();
-  const fallbackCode =
-    HttpStatus[statusCode] ?? ErrorCodes.INTERNAL_SERVER_ERROR;
+  const statusName: unknown = HttpStatus[statusCode];
+  const fallbackCode = isPublicErrorCode(statusName)
+    ? statusName
+    : ErrorCodes.HTTP_ERROR;
   const response = exception.getResponse();
 
   if (typeof response === 'string') {
@@ -93,7 +102,7 @@ const fromHttpException = (exception: HttpException): ErrorResponse => {
   const { message, code } = response as { message?: unknown; code?: unknown };
   return {
     statusCode,
-    code: typeof code === 'string' ? code : fallbackCode,
+    code: isPublicErrorCode(code) ? code : fallbackCode,
     message: joinMessages(message, exception.message),
   };
 };

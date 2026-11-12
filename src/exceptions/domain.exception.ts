@@ -1,5 +1,7 @@
+import { type ErrorCode } from 'src/constants';
+
 export abstract class DomainException extends Error {
-  abstract readonly code: string;
+  abstract readonly code: ErrorCode;
 
   constructor(message: string) {
     super(message);

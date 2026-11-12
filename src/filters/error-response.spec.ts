@@ -10,7 +10,11 @@ import {
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { toErrorResponse } from './error-response';
-import { ErrorCodes } from 'src/constants';
+import {
+  ErrorCodes,
+  HTTP_STATUS_ERROR_CODES,
+  PUBLIC_ERROR_CODES,
+} from 'src/constants';
 import {
   ActiveUserNotFoundException,
   CountryCodesNotFoundException,
@@ -97,7 +101,7 @@ describe('toErrorResponse', () => {
 
   it('maps an unregistered domain exception to a generic 500', () => {
     class UnmappedException extends DomainException {
-      readonly code = 'UNMAPPED';
+      readonly code = ErrorCodes.ALBUM_NOT_FOUND;
     }
 
     expect(
@@ -127,14 +131,14 @@ describe('toErrorResponse', () => {
 
   it('maps any infrastructure exception to 500 without registration', () => {
     class MailSendFailedException extends InfrastructureException {
-      readonly code = 'MAIL_SEND_FAILED';
+      readonly code = ErrorCodes.FILE_WRITE_TO_STORAGE_ERROR;
     }
 
     expect(
       toErrorResponse(new MailSendFailedException('Failed to send mail')),
     ).toStrictEqual({
       statusCode: 500,
-      code: 'MAIL_SEND_FAILED',
+      code: ErrorCodes.FILE_WRITE_TO_STORAGE_ERROR,
       message: 'Failed to send mail',
     });
   });
@@ -203,6 +207,37 @@ describe('toErrorResponse', () => {
     },
   );
 
+  it.each([
+    [new ForbiddenException(), 403, 'Forbidden'],
+    [
+      new HttpException('Method not allowed', HttpStatus.METHOD_NOT_ALLOWED),
+      405,
+      'Method not allowed',
+    ],
+  ])(
+    'sends HTTP_ERROR with the original status for unlisted status %p',
+    (exception, status, message) => {
+      expect(toErrorResponse(exception)).toStrictEqual({
+        statusCode: status,
+        code: ErrorCodes.HTTP_ERROR,
+        message,
+      });
+    },
+  );
+
+  it('ignores a code that is not public and falls back to the status name', () => {
+    const exception = new HttpException(
+      { message: 'Gone missing', code: 'MADE_UP_CODE' },
+      HttpStatus.NOT_FOUND,
+    );
+
+    expect(toErrorResponse(exception)).toStrictEqual({
+      statusCode: 404,
+      code: 'NOT_FOUND',
+      message: 'Gone missing',
+    });
+  });
+
   it('joins an array of HTTP exception messages', () => {
     const exception = new HttpException(
       { message: ['first problem', 'second problem'] },
@@ -222,5 +257,18 @@ describe('toErrorResponse', () => {
     [undefined],
   ])('hides unexpected errors behind a generic 500 (%p)', (exception) => {
     expect(toErrorResponse(exception)).toStrictEqual(INTERNAL);
+  });
+});
+
+describe('PUBLIC_ERROR_CODES', () => {
+  it('holds every application code and the listed status names, once each', () => {
+    expect([...PUBLIC_ERROR_CODES].sort()).toStrictEqual(
+      [...Object.values(ErrorCodes), ...HTTP_STATUS_ERROR_CODES].sort(),
+    );
+    expect(new Set(PUBLIC_ERROR_CODES).size).toBe(PUBLIC_ERROR_CODES.length);
+  });
+
+  it.each(HTTP_STATUS_ERROR_CODES)('%s is a real HttpStatus name', (name) => {
+    expect(typeof HttpStatus[name]).toBe('number');
   });
 });

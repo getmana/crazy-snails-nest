@@ -76,6 +76,11 @@ if a task depends on one.
   `error-response.spec.ts`; no registry entry. Log the underlying error where it's thrown.
 - Error bodies come only from `AllExceptionsFilter`. No extra filters and no hand-built error bodies.
   500s never leak internals. Don't rename existing codes without checking the FE.
+- `PUBLIC_ERROR_CODES` (`src/constants/error-codes.ts`) is every code a client can receive, and the
+  list the FE mirrors by hand. It's derived from `ErrorCodes` plus `HTTP_STATUS_ERROR_CODES`, so a new
+  `ErrorCodes` entry is public automatically; tell me when one is added or removed so the FE is synced.
+  To send another `HttpStatus` name as a code, add it to `HTTP_STATUS_ERROR_CODES`; otherwise it goes out
+  as `HTTP_ERROR`. Codes are typed (`ErrorCode`, `PublicErrorCode`): never widen them to `string`.
 
 **Validation**
 - Zod schema in the module's `dto/`, applied per parameter with `ZodValidationPipe`. `ParseIntPipe` for `:id`.
@@ -89,6 +94,9 @@ if a task depends on one.
 - A JSON request body is documented with `@ApiBody({ schema: zodToApiSchema(schema) })`, using the
   same schema the pipe validates with. Never hand-write it. The only exception is a multipart file
   upload, whose body has no Zod schema (see `photos.controller.ts`).
+- A file upload route sets its own size cap with Multer, `FileInterceptor('file', { limits: { fileSize } })`,
+  so oversized uploads are cut off early with 413. `ParseFilePipe` validators check type, and size only
+  where one route needs different limits per file type.
 
 **Data**
 - DTOs are camelCase and services map to snake_case columns by hand. `CamelCaseInterceptor` converts responses.
