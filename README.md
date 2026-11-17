@@ -45,7 +45,7 @@ This is the backend, built as a hands-on learning project to grow NestJS and API
 
 **Implemented**
 - **Auth**: sign-in (validated body, argon2), token refresh issuing a new access + refresh pair, sign-out. Deactivated users can't sign in or use existing tokens.
-- **Users**: registration (always as `editor`), list, get, update (username, email, locale, admin theme), soft deactivation (admin only). Email and username uniqueness is checked with clear 409 messages.
+- **Users**: registration (always as `editor`; closed unless `REGISTRATION_ENABLED=true`, otherwise 403 `REGISTRATION_CLOSED`), list, get, update (username, email, locale, admin theme), soft deactivation (admin only). Email and username uniqueness is checked with clear 409 messages.
 - **Albums**:
   - create (activity types, countries, date range), public list of published albums, "my albums" (including drafts), get, delete;
   - update with an **ordered photo list** and a preview photo, inside one transaction with ownership checks;
@@ -95,15 +95,8 @@ Requires Node 24 (see `.nvmrc`) and a PostgreSQL database.
 npm install
 ```
 
-Create a `.env` file:
-```
-DATABASE_URL=postgresql://...
-JWT_SECRET=...
-REFRESH_SECRET=...
-PORT=4000
-```
-
 ```bash
+cp .env.example .env     # then fill in the values; each variable is described there
 npx prisma migrate dev   # apply migrations
 npx prisma db seed       # seed countries
 npm run start:dev
