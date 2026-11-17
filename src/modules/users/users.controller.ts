@@ -26,7 +26,11 @@ import {
   updateUserSchema,
 } from './dto/users.dto';
 import { ZodValidationPipe } from 'src/pipes';
-import { RolesGuard, SelfOrAdminGuard } from 'src/guards';
+import {
+  RegistrationEnabledGuard,
+  RolesGuard,
+  SelfOrAdminGuard,
+} from 'src/guards';
 import { Roles } from 'src/decorators';
 import { AuthGuard } from '@nestjs/passport';
 import { zodToApiSchema } from 'src/utils';
@@ -37,10 +41,16 @@ export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Register a new user' })
+  @UseGuards(RegistrationEnabledGuard)
+  @ApiOperation({
+    summary: 'Register a new user',
+    description:
+      'Public registration is currently closed. Requests are rejected with 403 `REGISTRATION_CLOSED`.',
+  })
   @ApiBody({ schema: zodToApiSchema(createUserSchema) })
   @ApiResponse({ status: 201, description: 'User created' })
   @ApiResponse({ status: 400, description: 'Validation error' })
+  @ApiResponse({ status: 403, description: 'Registration is closed' })
   @ApiResponse({ status: 409, description: 'Email or username already exists' })
   async signupUser(
     @Body(new ZodValidationPipe(createUserSchema)) userData: CreateUserDto,
