@@ -97,6 +97,9 @@ if a task depends on one.
 - A file upload route sets its own size cap with Multer, `FileInterceptor('file', { limits: { fileSize } })`,
   so oversized uploads are cut off early with 413. `ParseFilePipe` validators check type, and size only
   where one route needs different limits per file type.
+- Every route is rate-limited by the global `ThrottlerGuard`. A route that checks credentials or secrets
+  (sign-in, a future password reset or invite redemption) gets a stricter `@Throttle` with a named
+  constant from `src/constants`, as in `AuthController.signin`.
 
 **Data**
 - DTOs are camelCase and services map to snake_case columns by hand. `CamelCaseInterceptor` converts responses.

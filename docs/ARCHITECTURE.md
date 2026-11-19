@@ -21,6 +21,7 @@ they go stale with every edit. Where behaviour comes from a library rather than 
 | Validation | Zod |
 | Auth | Passport + `passport-jwt` and `@nestjs/jwt`; passwords hashed with argon2 |
 | Logging | pino, through `pino-nestjs` |
+| Rate limiting | `@nestjs/throttler`, in-memory storage |
 | API docs | OpenAPI document from `@nestjs/swagger`, rendered by Scalar |
 | Tests | Jest + ts-jest |
 
@@ -32,19 +33,27 @@ depends on a major version, the sentence describing it names that version.
 `src/main.ts` → `bootstrap` creates the app and configures, in order:
 
 1. The pino logger replaces Nest's logger (`app.useLogger`).
-2. Uploaded files are served statically from `<cwd>/uploads` under the `/uploads/` prefix (`app.useStaticAssets`, `FILE_UPLOAD_URL` in `src/constants/index.ts`).
-3. One global exception filter, `AllExceptionsFilter`, is registered (`app.useGlobalFilters`). See [Error handling](#6-error-handling).
-4. A global `CamelCaseInterceptor` is registered (`app.useGlobalInterceptors`).
-5. The OpenAPI document is built from controller decorators and served by Scalar at `/api-docs`.
-6. The server listens on `PORT`, falling back to `3000`.
+2. If `TRUST_PROXY` is set, it's passed to Express's `trust proxy` setting, so `req.ip` is the client's IP behind a reverse proxy. Rate limiting depends on it. Unset, Express's default applies: no proxy is trusted.
+3. Uploaded files are served statically from `<cwd>/uploads` under the `/uploads/` prefix (`app.useStaticAssets`, `FILE_UPLOAD_URL` in `src/constants/index.ts`).
+4. One global exception filter, `AllExceptionsFilter`, is registered (`app.useGlobalFilters`). See [Error handling](#6-error-handling).
+5. A global `CamelCaseInterceptor` is registered (`app.useGlobalInterceptors`).
+6. The OpenAPI document is built from controller decorators and served by Scalar at `/api-docs`.
+7. The server listens on `PORT`, falling back to `3000`.
 
 A typical authenticated request passes through these stages:
+- the global `ThrottlerGuard` (see Rate limiting below);
 - the guard (`AuthGuard('jwt')`, which runs the JWT strategy);
 - the parameter pipes (`ParseIntPipe` and `ZodValidationPipe`);
 - the controller method, then the service method, then Prisma;
 - on the way out, the `CamelCaseInterceptor`.
 
 If anything throws along the way, `AllExceptionsFilter` produces the response.
+
+**Rate limiting.** `ThrottlerModule.forRootAsync` (options from `createThrottlerOptions` in `src/config/throttler.config.ts`) and `ThrottlerGuard`, registered as `APP_GUARD` in `src/app.module.ts`, limit every route to `DEFAULT_RATE_LIMIT` requests per IP per `RATE_LIMIT_WINDOW_MS`. `POST /auth/sign-in` overrides it with `@Throttle` to `SIGN_IN_RATE_LIMIT` (`auth.controller.ts` → `signin`). The constants are in `src/constants/index.ts`.
+- Over the limit, the guard throws a `ThrottlerException` (an `HttpException`), sent as 429 `TOO_MANY_REQUESTS` with a `Retry-After` header in seconds. The header is set by the guard and survives the filter.
+- Counters are kept in memory: they reset on restart and aren't shared between instances. That's fine for one instance; several instances would need a shared store such as Redis.
+- The client is identified by `req.ip` (library behaviour: `ThrottlerGuard.getTracker` in `node_modules/@nestjs/throttler/dist/throttler.guard.js`), so behind a proxy `TRUST_PROXY` must be set, or all clients share the proxy's counter.
+- **The frontend server skips every limit, the sign-in one included.** It calls the API from shared hosting IPs (Vercel), so per-IP counting would put all visitors on one counter; visitors are rate-limited in front of it by a Vercel firewall rule instead. A request skips when its `X-Frontend-Secret` header matches the `FRONTEND_API_SECRET` env variable (`skipIf` → `isTrustedFrontend`, a constant-time comparison of SHA-256 hashes). With the variable unset, nothing skips. A leaked secret bypasses rate limiting only, not authentication.
 
 ## 3. Layering
 
@@ -57,6 +66,7 @@ If anything throws along the way, `AllExceptionsFilter` produces the response.
 - **No controller references Prisma.** Every Prisma use is in a service file or a module provider list: `albums.service.ts`, `notes.service.ts`, `stories.service.ts`, `users.service.ts`, `countries.service.ts`, `photos.service.ts`, `shared-users.service.ts`, `src/modules/prisma/prisma.module.ts`.
 - **Every controller method makes one service call.** For example, sign-in calls only `AuthService.signin`, which validates the credentials and issues the tokens (`src/modules/auth/auth.controller.ts` → `signin`).
 - **Module folder layout.** The root of each folder in `src/modules/` holds only `*.module.ts`, `*.controller.ts`, `*.service.ts` and `*.spec.ts` files. Other files sit in subfolders by kind: `dto/` (albums, auth, photos, stories, users), `utils/` (stories) and `strategies/` (auth).
+- **App-level configuration** that needs code (not just a value) lives in `src/config/`: today only the throttler options (`throttler.config.ts`).
 - **Module-internal helpers** live in the module's `utils/` folder, even with a single user. Example: the pure photo-layout helpers that `StoriesService` uses for its uniqueness check (`src/modules/stories/utils/index.ts`). `src/utils/` holds domain-free helpers used outside a single module: `paginate`, `toJsonInput` (albums, stories), `zodToApiSchema` (albums, auth, stories, users), `prismaEnumValues` (albums, users) and `camelcaseKeys` (the global interceptor). `getErrorMessage` is exported there but has no importer.
 - **Imports.** Code outside the current folder is imported with a `src/…` path, never `../`, and folders with an `index.ts` barrel are imported through the barrel. ESLint enforces both (§10, Lint configuration).
 - **Field naming.** Request DTOs are camelCase, and services map them to snake_case columns by hand, e.g. `title_en: titleEn` in `stories.service.ts` and `albums.service.ts`. The global `CamelCaseInterceptor` converts response keys back to camelCase (`src/interceptors/camel-case.interceptor.ts`). Its `camelcaseKeys` recurses only into arrays and plain objects (`constructor === Object`, `src/utils/camelcaseKeys.ts`), so values such as `Date` pass through unchanged.
@@ -83,7 +93,7 @@ If anything throws along the way, `AllExceptionsFilter` produces the response.
   - `jwt-refresh` reads `REFRESH_SECRET` (`jwt-refresh.strategy.ts`).
 
   Both take the token from the `Authorization: Bearer` header (`ExtractJwt.fromAuthHeaderAsBearerToken`). Both look the user up on every request with `SharedUsersService.findActiveByEmail(payload.email)`, which filters `is_active: true`, and attach `{ id, email, role }` to `request.user` (`validate` in each strategy). When no active user is found, the strategies throw an `UnauthorizedException` with `AUTH_USER_NOT_FOUND`. These strategies run inside the authentication guard, not in the service layer.
-- **Sign-in.** The body is validated with `signInSchema` in the controller. The controller then makes one call, `AuthService.signin(credentials)`. That method calls `SharedUsersService.validateUser`, which loads the active user by email and checks the password with `argon2.verify`, and then issues the tokens. An unknown email and a wrong password both throw the same `InvalidCredentialsException` (`shared-users.service.ts` → `validateUser`), which is returned as 401 `INVALID_CREDENTIALS`. No tokens are issued in that case.
+- **Sign-in.** The body is validated with `signInSchema` in the controller. The controller then makes one call, `AuthService.signin(credentials)`. That method calls `SharedUsersService.validateUser`, which loads the active user by email and checks the password with `argon2.verify`, and then issues the tokens. An unknown email and a wrong password both throw the same `InvalidCredentialsException` (`shared-users.service.ts` → `validateUser`), which is returned as 401 `INVALID_CREDENTIALS`. No tokens are issued in that case. The route allows 5 attempts per IP per minute, then returns 429 `TOO_MANY_REQUESTS` (see Rate limiting in §2).
 - **Refresh.** `POST /auth/refresh` delegates straight to `AuthService.refreshToken`, with no error handling in the controller (`auth.controller.ts` → `refresh`).
 - **Sign-out.** It clears a `refresh_token` cookie, which is `secure` in production (`auth.controller.ts` → `signout`). The API never sets that cookie; see "Token transport" under Open questions in `CLAUDE.md`.
 - **Guards** (`src/guards/`):
@@ -145,7 +155,7 @@ All evidence in this table is in `src/filters/error-response.ts`:
 | Any `InfrastructureException` (`FileWriteException`, `TokenGenerationFailedException`) | 500 | the exception's `code` (`FILE_WRITE_TO_STORAGE_ERROR`, `TOKEN_GENERATION_FAILED`) | the exception's message | the `InfrastructureException` branch of `toErrorResponse` |
 | Prisma `P2025` / `P2002` | 404 / 409 | `RECORD_NOT_FOUND` / `UNIQUE_CONSTRAINT_VIOLATION` | fixed text | `PRISMA_ERROR_RESPONSES` |
 | Any other Prisma known-request error | 500 | `INTERNAL_SERVER_ERROR` | `'Internal server error'` | the Prisma branch of `toErrorResponse` |
-| `HttpException` (guards, strategies, `ParseIntPipe`, `ParseFilePipe`, malformed JSON bodies, unknown routes, Multer limits) | `getStatus()` | the response's `code` if it carries a public one; otherwise the status name if it's in `HTTP_STATUS_ERROR_CODES` (`BAD_REQUEST`, `UNAUTHORIZED`, `NOT_FOUND`, `PAYLOAD_TOO_LARGE`); otherwise `HTTP_ERROR` | the response's `message`; an array is joined with `'. '` | `fromHttpException`, `isPublicErrorCode` |
+| `HttpException` (guards, strategies, `ParseIntPipe`, `ParseFilePipe`, malformed JSON bodies, unknown routes, Multer limits, the rate limiter) | `getStatus()` | the response's `code` if it carries a public one; otherwise the status name if it's in `HTTP_STATUS_ERROR_CODES` (`BAD_REQUEST`, `UNAUTHORIZED`, `NOT_FOUND`, `PAYLOAD_TOO_LARGE`, `TOO_MANY_REQUESTS`); otherwise `HTTP_ERROR` | the response's `message`; an array is joined with `'. '` | `fromHttpException`, `isPublicErrorCode` |
 | Anything else | 500 | `INTERNAL_SERVER_ERROR` | `'Internal server error'` | `INTERNAL_ERROR_RESPONSE` |
 
 - **Statuses for domain exceptions** live in the mapper's registry (`DOMAIN_EXCEPTION_STATUS`), not on the exception classes. The registry is searched with `instanceof`, so subclasses inherit their parent's status.
@@ -202,7 +212,8 @@ AppModule
 
 - `ConfigModule` is global (`isGlobal: true` in `src/app.module.ts`), so `ConfigService` can be injected anywhere.
 - JWT secrets are read with `ConfigService.getOrThrow` (`auth.module.ts`, `AuthService.getTokens`, and both strategies' constructors).
-- `PORT` (`src/main.ts`) and `NODE_ENV` (`src/app.module.ts`, `AuthController.signout`) are read from `process.env`.
+- `FRONTEND_API_SECRET` is read with `ConfigService.get` in `createThrottlerOptions` (`src/config/throttler.config.ts`).
+- `PORT` and `TRUST_PROXY` (`src/main.ts`) and `NODE_ENV` (`src/app.module.ts`, `AuthController.signout`) are read from `process.env`.
 - The Prisma CLI loads `.env` through `import 'dotenv/config'` in `prisma.config.ts`.
 - Logging uses pino through `LoggerModule.forRoot`, formatted with `pino-pretty` when `NODE_ENV !== 'production'` (`src/app.module.ts`).
   - `AuthService` and `StorageService` inject a context logger with `@InjectPinoLogger` (their constructors).

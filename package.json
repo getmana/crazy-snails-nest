@@ -31,6 +31,7 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.1.6",
     "@nestjs/swagger": "^11.4.7",
+    "@nestjs/throttler": "6.7.1",
     "@prisma/client": "^6.16.2",
     "@scalar/nestjs-api-reference": "^1.2.16",
     "argon2": "^0.44.0",
