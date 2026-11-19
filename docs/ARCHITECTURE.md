@@ -49,7 +49,7 @@ A typical authenticated request passes through these stages:
 
 If anything throws along the way, `AllExceptionsFilter` produces the response.
 
-**Rate limiting.** `ThrottlerModule.forRootAsync` (options from `createThrottlerOptions` in `src/config/throttler.config.ts`) and `ThrottlerGuard`, registered as `APP_GUARD` in `src/app.module.ts`, limit every route to `DEFAULT_RATE_LIMIT` requests per IP per `RATE_LIMIT_WINDOW_MS`. `POST /auth/sign-in` overrides it with `@Throttle` to `SIGN_IN_RATE_LIMIT` (`auth.controller.ts` → `signin`). The constants are in `src/constants/index.ts`.
+**Rate limiting.** (How it fits with the frontend and Vercel, in plain language: [docs/flows/rate-limiting.md](flows/rate-limiting.md).) `ThrottlerModule.forRootAsync` (options from `createThrottlerOptions` in `src/config/throttler.config.ts`) and `ThrottlerGuard`, registered as `APP_GUARD` in `src/app.module.ts`, limit every route to `DEFAULT_RATE_LIMIT` requests per IP per `RATE_LIMIT_WINDOW_MS`. `POST /auth/sign-in` overrides it with `@Throttle` to `SIGN_IN_RATE_LIMIT` (`auth.controller.ts` → `signin`). The constants are in `src/constants/index.ts`.
 - Over the limit, the guard throws a `ThrottlerException` (an `HttpException`), sent as 429 `TOO_MANY_REQUESTS` with a `Retry-After` header in seconds. The header is set by the guard and survives the filter.
 - Counters are kept in memory: they reset on restart and aren't shared between instances. That's fine for one instance; several instances would need a shared store such as Redis.
 - The client is identified by `req.ip` (library behaviour: `ThrottlerGuard.getTracker` in `node_modules/@nestjs/throttler/dist/throttler.guard.js`), so behind a proxy `TRUST_PROXY` must be set, or all clients share the proxy's counter.

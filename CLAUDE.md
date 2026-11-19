@@ -5,6 +5,28 @@ Frontend: sibling repo `crazy-snails-front` (Next.js, `~/projects/CS/cs-front`).
 
 `docs/ARCHITECTURE.md` explains how the code works. Read the relevant section before changing
 that area (§4 auth, §5 validation, §6 errors, §7 modules, §9 testing).
+`docs/flows/` and `docs/decisions/` explain features and choices in plain language (see Docs below).
+
+## Docs
+Three kinds, each written for a different reader and changing at a different speed:
+- `docs/ARCHITECTURE.md`: precise technical reference (files, symbols, library behaviour).
+- `docs/flows/<feature>.md`: how a feature works end to end, across this API, the frontend
+  (`cs-front`) and infrastructure, in plain language. Flows that touch only the frontend live
+  in `cs-front/docs/flows/`.
+- `docs/decisions/NNNN-<title>.md`: why a choice was made, with the alternatives (an ADR:
+  Date, Status, Context, Decision, Alternatives considered, Consequences).
+
+Keeping them current:
+- Every flow starts with a `covers:` list of the code it describes (paths in this repo;
+  frontend items prefixed `cs-front:`). Before finishing a change, check the changed files
+  against these lists (`grep -rl '<path>' docs/flows`). If a flow covers a changed file, re-read
+  it and update it in the same commit when it's no longer true, including `last-reviewed`.
+- Write flows at the design level: who does what and why. Name constants instead of copying
+  their values, and cite symbols, never line numbers. Mark parts that are planned but not built.
+- Decisions are never rewritten. A changed decision gets a new ADR, and the old one's Status
+  becomes "Superseded by NNNN". Only Status may be edited.
+- When we settle a non-trivial design choice together (more than one defensible option),
+  propose an ADR for it; I decide whether to write one.
 
 ## Commands
 - `npm run lint:check`, `npm run typecheck`, `npm run build`, `npm test`
