@@ -29,6 +29,7 @@ This is the backend, built as a hands-on learning project to grow NestJS and API
 - **argon2** — password hashing
 - **pino** (`pino-nestjs`) — structured logging
 - **Multer** — file upload (memory storage)
+- **@nestjs/throttler** — rate limiting
 - **Jest** — unit tests
 - **GitHub Actions** — CI
 
@@ -39,6 +40,7 @@ This is the backend, built as a hands-on learning project to grow NestJS and API
 - **Single error format**: one catch-all exception filter maps every error to `{ statusCode, code, message }`. That covers domain, validation, Prisma, Nest's own and unexpected errors, with unexpected ones logged and never leaked. `code` is a stable identifier, so the frontend handles i18n and the backend never decides what to show the user. See [Error responses](#error-responses).
 - **Storage-agnostic file handling**: the database stores storage keys, never URLs or disk paths, and all file I/O goes through `StorageService` (`saveFile`, `deleteFile`, `getPublicFilePath`). Today files live on local disk and are served under `/uploads/`. Moving to S3, R2 or another object store means swapping the `StorageService` implementation and the static route. Stored keys stay valid, so no database migration is needed.
 - **camelCase API over a snake_case schema**: services map request fields to columns, and a global interceptor converts response keys to camelCase.
+- **Rate limiting** (`@nestjs/throttler`): 100 requests per minute per IP on every route, and 5 on sign-in to slow down password guessing. Over the limit, the API returns 429 `TOO_MANY_REQUESTS` with a `Retry-After` header. Behind a reverse proxy, `TRUST_PROXY` must be set. The frontend's server sends a shared secret (`FRONTEND_API_SECRET`) and skips these limits, because its visitors are rate-limited in front of it. See `.env.example`.
 - **Upload hardening**: an image must pass a magic-byte content check *and* an extension allowlist, so a valid image can't be stored or served as HTML.
 
 ## Current state
@@ -81,7 +83,7 @@ Every error response has the same body, and its `statusCode` always matches the 
 }
 ```
 
-- **`code`** is the stable, machine-readable part, meant for frontend logic and translations. Every code a client can receive is listed in `PUBLIC_ERROR_CODES` (`src/constants/error-codes.ts`), and the response type allows no other. Errors without an application code, such as a malformed path parameter, malformed JSON or an unknown route, use the HTTP status name: `BAD_REQUEST`, `UNAUTHORIZED`, `NOT_FOUND` or `PAYLOAD_TOO_LARGE` (a photo over 10 MB). Any other status the API doesn't expect keeps its HTTP status and returns `HTTP_ERROR`.
+- **`code`** is the stable, machine-readable part, meant for frontend logic and translations. Every code a client can receive is listed in `PUBLIC_ERROR_CODES` (`src/constants/error-codes.ts`), and the response type allows no other. Errors without an application code, such as a malformed path parameter, malformed JSON or an unknown route, use the HTTP status name: `BAD_REQUEST`, `UNAUTHORIZED`, `NOT_FOUND`, `PAYLOAD_TOO_LARGE` (a photo over 10 MB) or `TOO_MANY_REQUESTS` (rate limit hit). Any other status the API doesn't expect keeps its HTTP status and returns `HTTP_ERROR`.
 - **`message`** is a human-readable description. For validation errors (`400 VALIDATION_FAILED`), it joins every failed rule into one sentence list.
 - **Unexpected errors** always return `500 INTERNAL_SERVER_ERROR` with a generic message; the details are logged on the server only.
 

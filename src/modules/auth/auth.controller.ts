@@ -21,6 +21,8 @@ import { signInSchema, type SignInPayload } from './dto/auth.dto';
 import { UserStrategyPayload } from './strategies';
 import { zodToApiSchema } from 'src/utils';
 import { ZodValidationPipe } from 'src/pipes';
+import { Throttle } from '@nestjs/throttler';
+import { RATE_LIMIT_WINDOW_MS, SIGN_IN_RATE_LIMIT } from 'src/constants';
 
 @ApiTags('auth')
 @Controller('auth')
@@ -29,6 +31,9 @@ export class AuthController {
 
   @Post('sign-in')
   @HttpCode(200)
+  @Throttle({
+    default: { limit: SIGN_IN_RATE_LIMIT, ttl: RATE_LIMIT_WINDOW_MS },
+  })
   @ApiOperation({ summary: 'Sign in with email and password' })
   @ApiBody({ schema: zodToApiSchema(signInSchema) })
   @ApiResponse({
@@ -36,6 +41,7 @@ export class AuthController {
     description: 'Returns access token, refresh token, user id and locale',
   })
   @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  @ApiResponse({ status: 429, description: 'Too many sign-in attempts' })
   async signin(
     @Body(new ZodValidationPipe(signInSchema)) signInPayload: SignInPayload,
   ) {

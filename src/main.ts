@@ -14,6 +14,10 @@ async function bootstrap() {
 
   app.useLogger(app.get(Logger));
 
+  // Behind a reverse proxy, req.ip (and so rate limiting) needs the proxy trusted
+  const trustedProxies = process.env.TRUST_PROXY;
+  if (trustedProxies) app.set('trust proxy', trustedProxies);
+
   app.useStaticAssets(join(process.cwd(), FILE_UPLOAD_URL), {
     prefix: `/${FILE_UPLOAD_URL}/`,
   });

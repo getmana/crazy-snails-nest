@@ -12,3 +12,7 @@ export const ALLOWED_IMAGE_EXTENSIONS = ['.jpg', '.jpeg', '.png', '.webp'];
 export const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
 
 export const FILE_UPLOAD_URL = 'uploads';
+
+export const RATE_LIMIT_WINDOW_MS = 60_000;
+export const DEFAULT_RATE_LIMIT = 100;
+export const SIGN_IN_RATE_LIMIT = 5;

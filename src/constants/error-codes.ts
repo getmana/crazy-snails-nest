@@ -30,6 +30,7 @@ export const HTTP_STATUS_ERROR_CODES = [
   'UNAUTHORIZED',
   'NOT_FOUND',
   'PAYLOAD_TOO_LARGE',
+  'TOO_MANY_REQUESTS',
 ] as const satisfies readonly (keyof typeof HttpStatus)[];
 
 export type PublicErrorCode =

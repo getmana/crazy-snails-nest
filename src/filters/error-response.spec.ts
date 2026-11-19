@@ -7,6 +7,7 @@ import {
   PayloadTooLargeException,
   UnauthorizedException,
 } from '@nestjs/common';
+import { ThrottlerException } from '@nestjs/throttler';
 import { Prisma } from '@prisma/client';
 import { z } from 'zod';
 import { toErrorResponse } from './error-response';
@@ -189,6 +190,12 @@ describe('toErrorResponse', () => {
       413,
       'PAYLOAD_TOO_LARGE',
       'File too large',
+    ],
+    [
+      new ThrottlerException('Too many requests'),
+      429,
+      'TOO_MANY_REQUESTS',
+      'Too many requests',
     ],
     [
       new HttpException('Plain text', HttpStatus.BAD_REQUEST),
