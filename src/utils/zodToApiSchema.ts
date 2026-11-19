@@ -8,5 +8,5 @@ export function zodToApiSchema(schema: z.ZodType): object {
         Object.assign(jsonSchema, { type: 'string', format: 'date-time' });
       }
     },
-  }) as object;
+  });
 }
