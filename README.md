@@ -60,6 +60,7 @@ This is the backend, built as a hands-on learning project to grow NestJS and API
 
 **Planned / in progress**
 - Photo processing pipeline (thumbnails, WebP). Uploads are currently stored as `pending`, with no thumbnails.
+- Per-user upload quota (`MAX_PHOTOS_PER_USER`, `MAX_STORAGE_BYTES_PER_USER`), enforced once uploads go directly to S3. Each photo's size is already recorded.
 - Interactive map per album
 - Custom section
 - Per-user subdomains

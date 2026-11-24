@@ -14,7 +14,11 @@ import { FileWriteException } from 'src/exceptions';
 import { asyncMock } from 'src/testing/jest-mocks';
 
 const KEY = '2026-10-14/photo-key.png';
-const file = { originalname: 'photo.png' } as Express.Multer.File;
+const FILE_SIZE = 2048;
+const file = {
+  originalname: 'photo.png',
+  size: FILE_SIZE,
+} as Express.Multer.File;
 
 const mockStorage = {
   saveFile: asyncMock(),
@@ -54,7 +58,12 @@ describe('PhotosService.create', () => {
 
     expect(mockStorage.saveFile).toHaveBeenCalledWith(file);
     expect(mockPrisma.photo.create).toHaveBeenCalledWith({
-      data: { original_key: KEY, status: 'pending', user_id: 7 },
+      data: {
+        original_key: KEY,
+        size_bytes: FILE_SIZE,
+        status: 'pending',
+        user_id: 7,
+      },
     });
     expect(result).toEqual({
       photoId: 3,
