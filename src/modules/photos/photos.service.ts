@@ -22,6 +22,7 @@ export class PhotosService {
       .create({
         data: {
           original_key: originalKey,
+          size_bytes: file.size,
           status: 'pending',
           user_id: userId,
         },
