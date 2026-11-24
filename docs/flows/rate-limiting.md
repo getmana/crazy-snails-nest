@@ -7,9 +7,11 @@ covers:
   - src/constants/index.ts
   - src/constants/error-codes.ts
   - .env.example
-  - cs-front: server-side calls to the API (route handlers, server actions)
+  - cs-front: src/api/apiFetch.ts
+  - cs-front: src/constants/apiHeaders.ts
+  - cs-front: src/constants/apiErrorCodes.ts
   - cs-front: Vercel firewall rule
-last-reviewed: 2026-11-19
+last-reviewed: 2026-11-24
 ---
 
 # Rate limiting
@@ -17,9 +19,9 @@ last-reviewed: 2026-11-19
 How the app stops one client from sending too many requests, mainly to slow down
 password guessing on sign-in. Why it's built this way: [decision 0001](../decisions/0001-rate-limiting-trust-frontend-by-secret.md).
 
-> **Status (2026-11-19):** the API side is built. The frontend side (secret header,
-> Vercel firewall rule, `TOO_MANY_REQUESTS` translation) is planned and not built yet.
-> Until it is, don't deploy the API to production: every visitor would share one counter.
+> **Status (2026-11-24):** the API side and the frontend code (secret header,
+> `TOO_MANY_REQUESTS` and `REGISTRATION_CLOSED` translations) are built. The Vercel firewall
+> rule is planned for the first deploy. Without it, sign-in through the website has no limit.
 
 ## The big picture
 
@@ -91,4 +93,6 @@ saying how many seconds to wait. The frontend translates the code like any other
 - The stricter sign-in limit: `@Throttle` on `AuthController.signin`.
 - Limit values: `RATE_LIMIT_WINDOW_MS`, `DEFAULT_RATE_LIMIT`, `SIGN_IN_RATE_LIMIT` in `src/constants/index.ts`.
 - Trusting nginx: `TRUST_PROXY` in `src/main.ts`.
+- Frontend: every server-side API call goes through `apiFetch` (`cs-front/src/api/apiFetch.ts`),
+  which adds the secret header and logs a warning once if `FRONTEND_API_SECRET` is unset.
 - Technical detail: [ARCHITECTURE.md § Rate limiting](../ARCHITECTURE.md#2-bootstrap-and-request-lifecycle).
