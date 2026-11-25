@@ -8,11 +8,19 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import { CamelCaseInterceptor } from './interceptors';
 import { AllExceptionsFilter } from './filters/all-exceptions.filter';
+import helmet from 'helmet';
+import {
+  allowCrossOriginEmbedding,
+  API_DOCS_SCRIPT_URL,
+  apiDocsContentSecurityPolicy,
+} from './config/security-headers.config';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
   app.useLogger(app.get(Logger));
+
+  app.use(helmet());
 
   // Behind a reverse proxy, req.ip (and so rate limiting) needs the proxy trusted
   const trustedProxies = process.env.TRUST_PROXY;
@@ -20,6 +28,7 @@ async function bootstrap() {
 
   app.useStaticAssets(join(process.cwd(), FILE_UPLOAD_URL), {
     prefix: `/${FILE_UPLOAD_URL}/`,
+    setHeaders: allowCrossOriginEmbedding,
   });
 
   app.useGlobalFilters(new AllExceptionsFilter());
@@ -34,7 +43,11 @@ async function bootstrap() {
     .build();
 
   const document = SwaggerModule.createDocument(app, config);
-  app.use('/api-docs', apiReference({ spec: { content: document } }));
+  app.use(
+    '/api-docs',
+    apiDocsContentSecurityPolicy(),
+    apiReference({ spec: { content: document }, cdn: API_DOCS_SCRIPT_URL }),
+  );
 
   await app.listen(process.env.PORT ?? 3000);
 }
