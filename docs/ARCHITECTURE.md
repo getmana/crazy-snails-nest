@@ -22,6 +22,7 @@ they go stale with every edit. Where behaviour comes from a library rather than 
 | Auth | Passport + `passport-jwt` and `@nestjs/jwt`; passwords hashed with argon2 |
 | Logging | pino, through `pino-nestjs` |
 | Rate limiting | `@nestjs/throttler`, in-memory storage |
+| Security headers | `helmet` |
 | API docs | OpenAPI document from `@nestjs/swagger`, rendered by Scalar |
 | Tests | Jest + ts-jest |
 
@@ -33,12 +34,13 @@ depends on a major version, the sentence describing it names that version.
 `src/main.ts` → `bootstrap` creates the app and configures, in order:
 
 1. The pino logger replaces Nest's logger (`app.useLogger`).
-2. If `TRUST_PROXY` is set, it's passed to Express's `trust proxy` setting, so `req.ip` is the client's IP behind a reverse proxy. Rate limiting depends on it. Unset, Express's default applies: no proxy is trusted.
-3. Uploaded files are served statically from `<cwd>/uploads` under the `/uploads/` prefix (`app.useStaticAssets`, `FILE_UPLOAD_URL` in `src/constants/index.ts`).
-4. One global exception filter, `AllExceptionsFilter`, is registered (`app.useGlobalFilters`). See [Error handling](#6-error-handling).
-5. A global `CamelCaseInterceptor` is registered (`app.useGlobalInterceptors`).
-6. The OpenAPI document is built from controller decorators and served by Scalar at `/api-docs`.
-7. The server listens on `PORT`, falling back to `3000`.
+2. `helmet()` is registered as the first middleware, so its headers apply to every route, static files included. See Security headers below.
+3. If `TRUST_PROXY` is set, it's passed to Express's `trust proxy` setting, so `req.ip` is the client's IP behind a reverse proxy. Rate limiting depends on it. Unset, Express's default applies: no proxy is trusted.
+4. Uploaded files are served statically from `<cwd>/uploads` under the `/uploads/` prefix (`app.useStaticAssets`, `FILE_UPLOAD_URL` in `src/constants/index.ts`).
+5. One global exception filter, `AllExceptionsFilter`, is registered (`app.useGlobalFilters`). See [Error handling](#6-error-handling).
+6. A global `CamelCaseInterceptor` is registered (`app.useGlobalInterceptors`).
+7. The OpenAPI document is built from controller decorators and served by Scalar at `/api-docs`.
+8. The server listens on `PORT`, falling back to `3000`.
 
 A typical authenticated request passes through these stages:
 - the global `ThrottlerGuard` (see Rate limiting below);
@@ -54,6 +56,13 @@ If anything throws along the way, `AllExceptionsFilter` produces the response.
 - Counters are kept in memory: they reset on restart and aren't shared between instances. That's fine for one instance; several instances would need a shared store such as Redis.
 - The client is identified by `req.ip` (library behaviour: `ThrottlerGuard.getTracker` in `node_modules/@nestjs/throttler/dist/throttler.guard.js`), so behind a proxy `TRUST_PROXY` must be set, or all clients share the proxy's counter.
 - **The frontend server skips every limit, the sign-in one included.** It calls the API from shared hosting IPs (Vercel), so per-IP counting would put all visitors on one counter; visitors are rate-limited in front of it by a Vercel firewall rule instead. A request skips when its `X-Frontend-Secret` header matches the `FRONTEND_API_SECRET` env variable (`skipIf` → `isTrustedFrontend`, a constant-time comparison of SHA-256 hashes). With the variable unset, nothing skips. A leaked secret bypasses rate limiting only, not authentication.
+
+**Security headers.** (Why: [decision 0002](decisions/0002-security-headers-helmet-no-cors.md).) `helmet()` with its defaults (helmet 8) sets, among others, a strict `Content-Security-Policy`, `Cross-Origin-Resource-Policy: same-origin`, `Strict-Transport-Security`, `X-Content-Type-Options: nosniff` and `X-Frame-Options: SAMEORIGIN`, and removes `X-Powered-By`. Two routes override one header each, with helpers from `src/config/security-headers.config.ts`:
+- `/api-docs` adds `apiDocsContentSecurityPolicy` after the global helmet, which replaces the CSP header. Its `script-src` also allows `'unsafe-inline'` and `API_DOCS_SCRIPT_URL`, because Scalar's page loads its bundle from that URL and starts it with an inline script. `apiReference` is given the same URL as `cdn`, so the page and the policy can't drift apart. Every other directive keeps helmet's default.
+- `/uploads` sets `Cross-Origin-Resource-Policy: cross-origin` through `useStaticAssets`' `setHeaders` (`allowCrossOriginEmbedding`), so a page on the frontend's origin can show the photos directly.
+- These headers only affect browsers. Most JSON traffic comes from the frontend's server, where they do nothing; they matter for `/uploads`, `/api-docs` and anyone opening the API in a browser.
+
+**CORS is not enabled.** `enableCors` is never called, so the API sends no `Access-Control-Allow-*` headers and browsers on other origins can't read its responses. That's on purpose: the frontend calls the API only from its server, and its browser code talks to its own Next.js routes. Images loaded with `<img>` aren't subject to CORS. Enable CORS only for a concrete browser-to-API call, with an explicit origin list, never `*`.
 
 ## 3. Layering
 
