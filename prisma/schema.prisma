@@ -84,7 +84,6 @@ model PhotoAlbum {
 
   @@id([album_id, photo_id])
   @@unique([album_id, position])
-  @@index([album_id])
   @@index([photo_id])
 }
 
@@ -130,8 +129,6 @@ model GalleryImageStory {
 
   @@id([photo_id, story_id])
   @@unique([story_id, position])
-  @@index([photo_id])
-  @@index([story_id])
 }
 
 model PairImageStory {
@@ -143,8 +140,6 @@ model PairImageStory {
 
   @@id([photo_id, story_id])
   @@unique([story_id, position])
-  @@index([photo_id])
-  @@index([story_id])
 }
 
 model CarouselStory {
@@ -159,8 +154,6 @@ model CarouselStory {
 
   @@id([photo_id, story_id])
   @@unique([story_id, position])
-  @@index([photo_id])
-  @@index([story_id])
 }
 
 model Note {
@@ -184,7 +177,6 @@ model Note {
   user           User     @relation(fields: [user_id], references: [id])
 
   @@unique([photo_id, album_id])
-  @@index([photo_id])
   @@index([album_id])
   @@index([user_id])
 }
@@ -209,8 +201,6 @@ model CountryAlbum {
 
   @@id([country_id, album_id])
   @@unique([album_id, position])
-  @@index([country_id])
-  @@index([album_id])
 }
 
 enum Role {
