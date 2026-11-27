@@ -223,7 +223,7 @@ AppModule
 - JWT secrets are read with `ConfigService.getOrThrow` (`auth.module.ts`, `AuthService.getTokens`, and both strategies' constructors).
 - `FRONTEND_API_SECRET` is read with `ConfigService.get` in `createThrottlerOptions` (`src/config/throttler.config.ts`).
 - `PORT` and `TRUST_PROXY` (`src/main.ts`) and `NODE_ENV` (`src/app.module.ts`, `AuthController.signout`) are read from `process.env`.
-- The Prisma CLI loads `.env` through `import 'dotenv/config'` in `prisma.config.ts`, which also gives the CLI its `DATABASE_URL` (`datasource.url`). The schema's `datasource` block has no `url`.
+- The Prisma CLI loads `.env` through `import 'dotenv/config'` in `prisma.config.ts`, which also gives the CLI its `DATABASE_URL` (`datasource.url`). The schema's `datasource` block has no `url`. The config reads `process.env.DATABASE_URL` directly rather than through Prisma's `env()` helper. `env()` throws when the config file loads if the variable is unset, which would break `prisma generate` in CI, although generate needs no database. Commands that connect (`migrate`, `db`) still fail clearly without it.
 - At runtime the Prisma client doesn't read `.env` itself. `PrismaService` gets `DATABASE_URL` from `ConfigService`. Scripts that build their own `PrismaClient` pass a `PrismaPg` adapter from `process.env.DATABASE_URL`: `prisma/seed.ts` inherits the env from the Prisma CLI, and `prisma/backfills/photo-size-bytes.ts` imports `dotenv/config`.
 - Logging uses pino through `LoggerModule.forRoot`, formatted with `pino-pretty` when `NODE_ENV !== 'production'` (`src/app.module.ts`).
   - `AuthService` and `StorageService` inject a context logger with `@InjectPinoLogger` (their constructors).
