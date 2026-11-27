@@ -11,7 +11,7 @@ covers:
   - cs-front: src/constants/apiHeaders.ts
   - cs-front: src/constants/apiErrorCodes.ts
   - cs-front: Vercel firewall rule
-last-reviewed: 2026-11-24
+last-reviewed: 2026-11-27
 ---
 
 # Rate limiting
@@ -75,8 +75,9 @@ saying how many seconds to wait. The frontend translates the code like any other
 
 | Missing | Effect |
 |---|---|
-| `TRUST_PROXY` on the API | Direct callers all look like nginx and share one counter: a few bad sign-ins lock everyone out of direct API access. |
-| The secret on either side | The website's traffic is counted as a handful of Vercel IPs: visitors start getting 429s under light load. |
+| `TRUST_PROXY` on the API | Direct callers all look like nginx and share one counter: a few bad sign-ins lock everyone out of direct API access. (`TRUST_PROXY=true` is worse, so the API refuses to start with it.) |
+| The secret on the API | In production the API refuses to start and names the missing variable (env validation at boot). |
+| The secret on the frontend | The website's traffic is counted as a handful of Vercel IPs: visitors start getting 429s under light load. |
 | The Vercel firewall rule | Sign-in through the website has no limit at all, because the API skips our frontend's requests. |
 | The secret leaks | Someone can bypass rate limiting (not authentication). Rotate it on both sides. |
 
