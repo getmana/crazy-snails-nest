@@ -16,3 +16,5 @@ export const FILE_UPLOAD_URL = 'uploads';
 export const RATE_LIMIT_WINDOW_MS = 60_000;
 export const DEFAULT_RATE_LIMIT = 100;
 export const SIGN_IN_RATE_LIMIT = 5;
+
+export const DB_CONNECTION_TIMEOUT_MS = 15_000;
