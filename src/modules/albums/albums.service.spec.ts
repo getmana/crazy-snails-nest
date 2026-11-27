@@ -7,7 +7,7 @@ import {
   jest,
 } from '@jest/globals';
 import { Test } from '@nestjs/testing';
-import { ActivityType, Role } from '@prisma/client';
+import { ActivityType, Role } from 'src/generated/prisma/client';
 import { AlbumsService } from './albums.service';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { SharedUsersService } from 'src/modules/shared/users/shared-users.service';

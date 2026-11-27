@@ -7,7 +7,7 @@ import {
   jest,
 } from '@jest/globals';
 import { Test } from '@nestjs/testing';
-import { Role } from '@prisma/client';
+import { Role } from 'src/generated/prisma/client';
 import { StoriesService } from './stories.service';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { SharedUsersService } from 'src/modules/shared/users/shared-users.service';

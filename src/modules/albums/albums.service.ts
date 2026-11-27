@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import { CreateAlbumDto } from './dto/create-album.dto';
-import { ActivityType, Prisma } from '@prisma/client';
+import { ActivityType, Prisma } from 'src/generated/prisma/client';
 import {
   AlbumNotFoundException,
   EntityNotPublished,

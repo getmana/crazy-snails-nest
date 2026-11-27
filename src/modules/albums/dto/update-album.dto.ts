@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { TiptapDocumentSchema } from 'src/dto';
 import { prismaEnumValues } from 'src/utils';
-import { ActivityType } from '@prisma/client';
+import { ActivityType } from 'src/generated/prisma/client';
 
 export const UpdateAlbumSchema = z
   .object({

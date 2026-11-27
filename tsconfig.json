@@ -26,8 +26,8 @@
   "include": [
     "src/**/*.ts",
     "src/@types/**/*.d.ts",
-    "prisma/seeds",
-    "prisma/backfills"
+    "prisma",
+    "prisma.config.ts"
   ],
   "exclude": [
     "node_modules",

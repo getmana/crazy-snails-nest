@@ -17,7 +17,7 @@ import {
   resolveStoryPhotoIds,
   storedStoryPhotosSelect,
 } from './utils';
-import { Prisma } from '@prisma/client';
+import { Prisma } from 'src/generated/prisma/client';
 import { buildPaginationArgs, findManyPaginated, toJsonInput } from 'src/utils';
 import { UserStrategyPayload } from 'src/modules/auth/strategies';
 import { SharedUsersService } from 'src/modules/shared/users/shared-users.service';

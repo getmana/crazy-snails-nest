@@ -8,7 +8,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { ThrottlerException } from '@nestjs/throttler';
-import { Prisma } from '@prisma/client';
+import { Prisma } from 'src/generated/prisma/client';
 import { z } from 'zod';
 import { toErrorResponse } from './error-response';
 import {

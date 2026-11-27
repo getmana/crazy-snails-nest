@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { ForbiddenException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Role } from '@prisma/client';
+import { Role } from 'src/generated/prisma/client';
 import { SelfOrAdminGuard } from './self-or-admin.guard';
 import { type UserStrategyPayload } from 'src/modules/auth/strategies';
 import { createHttpContext } from 'src/testing/http-context';

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { Locale, AdminTheme, Role } from '@prisma/client';
+import { Locale, AdminTheme, Role } from 'src/generated/prisma/client';
 import { prismaEnumValues } from 'src/utils';
 
 export const createUserSchema = z.object({

@@ -101,6 +101,7 @@ npm install
 
 ```bash
 cp .env.example .env     # then fill in the values; each variable is described there
+npx prisma generate      # generate the Prisma client (also after every schema change)
 npx prisma migrate dev   # apply migrations
 npx prisma db seed       # seed countries
 npm run start:dev

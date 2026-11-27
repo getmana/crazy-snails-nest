@@ -17,7 +17,7 @@ they go stale with every edit. Where behaviour comes from a library rather than 
 | Concern | Technology |
 | --- | --- |
 | Framework | NestJS on Express (`@nestjs/platform-express`) |
-| Database / ORM | PostgreSQL via Prisma (`prisma-client-js` generator) |
+| Database / ORM | PostgreSQL via Prisma 7 (`prisma-client` generator, `moduleFormat = "cjs"`, output in `src/generated/prisma`, gitignored) with the `@prisma/adapter-pg` driver adapter. Prisma types and enums are imported from `src/generated/prisma/client` |
 | Validation | Zod |
 | Auth | Passport + `passport-jwt` and `@nestjs/jwt`; passwords hashed with argon2 |
 | Logging | pino, through `pino-nestjs` |
@@ -70,7 +70,7 @@ If anything throws along the way, `AllExceptionsFilter` produces the response.
 | --- | --- | --- |
 | Controller | Routing, Swagger decorators, guards, parsing/validation of params, query and body, then delegation to one service call | `src/modules/*/*.controller.ts` |
 | Service | Business rules, ownership checks, mapping DTO fields to DB columns, Prisma calls | `src/modules/*/*.service.ts` |
-| Data access | `PrismaService` extends `PrismaClient`; there is no separate repository layer | `src/modules/prisma/prisma.service.ts` |
+| Data access | `PrismaService` extends `PrismaClient` and passes it a `PrismaPg` adapter built from `DATABASE_URL` (`ConfigService.getOrThrow`); there is no separate repository layer | `src/modules/prisma/prisma.service.ts` |
 
 - **No controller references Prisma.** Every Prisma use is in a service file or a module provider list: `albums.service.ts`, `notes.service.ts`, `stories.service.ts`, `users.service.ts`, `countries.service.ts`, `photos.service.ts`, `shared-users.service.ts`, `src/modules/prisma/prisma.module.ts`.
 - **Every controller method makes one service call.** For example, sign-in calls only `AuthService.signin`, which validates the credentials and issues the tokens (`src/modules/auth/auth.controller.ts` → `signin`).
@@ -223,7 +223,8 @@ AppModule
 - JWT secrets are read with `ConfigService.getOrThrow` (`auth.module.ts`, `AuthService.getTokens`, and both strategies' constructors).
 - `FRONTEND_API_SECRET` is read with `ConfigService.get` in `createThrottlerOptions` (`src/config/throttler.config.ts`).
 - `PORT` and `TRUST_PROXY` (`src/main.ts`) and `NODE_ENV` (`src/app.module.ts`, `AuthController.signout`) are read from `process.env`.
-- The Prisma CLI loads `.env` through `import 'dotenv/config'` in `prisma.config.ts`.
+- The Prisma CLI loads `.env` through `import 'dotenv/config'` in `prisma.config.ts`, which also gives the CLI its `DATABASE_URL` (`datasource.url`). The schema's `datasource` block has no `url`.
+- At runtime the Prisma client doesn't read `.env` itself. `PrismaService` gets `DATABASE_URL` from `ConfigService`. Scripts that build their own `PrismaClient` pass a `PrismaPg` adapter from `process.env.DATABASE_URL`: `prisma/seed.ts` inherits the env from the Prisma CLI, and `prisma/backfills/photo-size-bytes.ts` imports `dotenv/config`.
 - Logging uses pino through `LoggerModule.forRoot`, formatted with `pino-pretty` when `NODE_ENV !== 'production'` (`src/app.module.ts`).
   - `AuthService` and `StorageService` inject a context logger with `@InjectPinoLogger` (their constructors).
   - `AllExceptionsFilter` uses Nest's `Logger` (`src/filters/all-exceptions.filter.ts`), which goes to pino because of `app.useLogger` in `src/main.ts`.
@@ -266,7 +267,7 @@ AppModule
 
 | Script | Runs |
 | --- | --- |
-| `build` | `nest build`, which uses `tsconfig.build.json`; `nest-cli.json` deletes `dist/` first. Output goes to `dist/src/` (and `dist/prisma/`), because `tsconfig.json` also includes `prisma/seeds` |
+| `build` | `nest build`, which uses `tsconfig.build.json`; `nest-cli.json` deletes `dist/` first. Output goes to `dist/src/` (and `dist/prisma/`), because `tsconfig.json` also includes `prisma/` (seed, seeds, backfills) and `prisma.config.ts`, so ESLint's project service and `typecheck` cover them. `tsconfig.build.json` excludes `prisma.config.ts` from the build |
 | `start` / `start:dev` / `start:debug` | `nest start`, plus `--watch` / `--debug --watch` |
 | `start:prod` | `node dist/src/main` |
 | `lint` | `eslint "src/**/*.ts" --fix` |
@@ -282,8 +283,8 @@ AppModule
 
 - Schema: `prisma/schema.prisma`.
 - Migrations: `prisma/migrations/`.
-- `npx prisma migrate dev` applies and creates migrations, and `npx prisma generate` regenerates the client.
-- `npx prisma db seed` runs `ts-node prisma/seed.ts` (the `seed` entry in `prisma.config.ts`), which seeds countries (`prisma/seeds/countries.seed.ts`).
+- `npx prisma generate` writes the client to `src/generated/prisma`. Nothing runs it automatically: run it after `npm install` and after every schema change. `npx prisma migrate dev` applies and creates migrations but no longer runs `generate` or the seed.
+- `npx prisma db seed` runs `ts-node -r tsconfig-paths/register prisma/seed.ts` (the `seed` entry in `prisma.config.ts`), which seeds countries (`prisma/seeds/countries.seed.ts`).
 
 ### Pre-commit hook (`.husky/pre-commit`)
 
@@ -307,7 +308,7 @@ AppModule
 
 ### Lint configuration (`eslint.config.mjs`)
 
-`@eslint/js` recommended, `typescript-eslint` `recommendedTypeChecked` with `projectService: true`, and `eslint-plugin-prettier`. `no-explicit-any` keeps its `error` level from `recommendedTypeChecked`. The project's own `rules` block:
+`src/generated/**` (the Prisma client) is ignored. `@eslint/js` recommended, `typescript-eslint` `recommendedTypeChecked` with `projectService: true`, and `eslint-plugin-prettier`. `no-explicit-any` keeps its `error` level from `recommendedTypeChecked`. The project's own `rules` block:
 - `no-floating-promises` is lowered to a warning;
 - `no-unsafe-argument` is lowered to a warning;
 - `no-restricted-imports` is an error, with two `regex` patterns:
