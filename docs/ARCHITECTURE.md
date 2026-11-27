@@ -75,7 +75,7 @@ If anything throws along the way, `AllExceptionsFilter` produces the response.
 - **No controller references Prisma.** Every Prisma use is in a service file or a module provider list: `albums.service.ts`, `notes.service.ts`, `stories.service.ts`, `users.service.ts`, `countries.service.ts`, `photos.service.ts`, `shared-users.service.ts`, `src/modules/prisma/prisma.module.ts`.
 - **Every controller method makes one service call.** For example, sign-in calls only `AuthService.signin`, which validates the credentials and issues the tokens (`src/modules/auth/auth.controller.ts` → `signin`).
 - **Module folder layout.** The root of each folder in `src/modules/` holds only `*.module.ts`, `*.controller.ts`, `*.service.ts` and `*.spec.ts` files. Other files sit in subfolders by kind: `dto/` (albums, auth, photos, stories, users), `utils/` (stories) and `strategies/` (auth).
-- **App-level configuration** that needs code (not just a value) lives in `src/config/`: today only the throttler options (`throttler.config.ts`).
+- **App-level configuration** that needs code (not just a value) lives in `src/config/`: the throttler options (`throttler.config.ts`), env validation (`env.config.ts`) and the security-header helpers (`security-headers.config.ts`).
 - **Module-internal helpers** live in the module's `utils/` folder, even with a single user. Example: the pure photo-layout helpers that `StoriesService` uses for its uniqueness check (`src/modules/stories/utils/index.ts`). `src/utils/` holds domain-free helpers used outside a single module: `paginate`, `toJsonInput` (albums, stories), `zodToApiSchema` (albums, auth, stories, users), `prismaEnumValues` (albums, users) and `camelcaseKeys` (the global interceptor). `getErrorMessage` is exported there but has no importer.
 - **Imports.** Code outside the current folder is imported with a `src/…` path, never `../`, and folders with an `index.ts` barrel are imported through the barrel. ESLint enforces both (§10, Lint configuration).
 - **Field naming.** Request DTOs are camelCase, and services map them to snake_case columns by hand, e.g. `title_en: titleEn` in `stories.service.ts` and `albums.service.ts`. The global `CamelCaseInterceptor` converts response keys back to camelCase (`src/interceptors/camel-case.interceptor.ts`). Its `camelcaseKeys` recurses only into arrays and plain objects (`constructor === Object`, `src/utils/camelcaseKeys.ts`), so values such as `Date` pass through unchanged.
@@ -220,6 +220,13 @@ AppModule
 ## 8. Configuration and logging
 
 - `ConfigModule` is global (`isGlobal: true` in `src/app.module.ts`), so `ConfigService` can be injected anywhere.
+- **Env validation at boot.** `ConfigModule.forRoot` gets `validate: validateEnv` (`src/config/env.config.ts`). `@nestjs/config` calls it once with `.env` merged over `process.env`, before any provider is created. If any rule fails it throws and the app doesn't start. The single error lists every failing variable with a message and never its value. The rules (Zod `envSchema`; an empty string counts as unset):
+  - required: `DATABASE_URL` (a `postgres://` or `postgresql://` URL), `JWT_SECRET` and `REFRESH_SECRET` (each at least `MIN_SECRET_LENGTH` characters, and different from each other);
+  - optional, checked when set: `PORT` (an integer port), `NODE_ENV` (`development`, `production` or `test`), `REGISTRATION_ENABLED` (`true` or `false`), `TRUST_PROXY` (anything except `true`);
+  - with `NODE_ENV=production`, `FRONTEND_API_SECRET` is also required.
+  - The cross-field rules (`superRefine` with `when`) run even when a field already failed, so a single error lists everything. Field checks must not use Zod's `abort`: an explicitly aborted issue makes Zod skip `when` checks too.
+  - `validateEnv` returns its input unchanged, so values stay strings. `ConfigService.get` reads the validated object ahead of `process.env`; a transforming schema (for example `REGISTRATION_ENABLED` to a boolean) would change what every `get` call returns.
+  - Specs that build `new ConfigService()` directly don't run `validateEnv`.
 - JWT secrets are read with `ConfigService.getOrThrow` (`auth.module.ts`, `AuthService.getTokens`, and both strategies' constructors).
 - `FRONTEND_API_SECRET` is read with `ConfigService.get` in `createThrottlerOptions` (`src/config/throttler.config.ts`).
 - `PORT` and `TRUST_PROXY` (`src/main.ts`) and `NODE_ENV` (`src/app.module.ts`, `AuthController.signout`) are read from `process.env`.
