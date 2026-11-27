@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from '@jest/globals';
 import { UnauthorizedException } from '@nestjs/common';
-import { Role } from '@prisma/client';
+import { Role } from 'src/generated/prisma/client';
 import { OptionalJwtGuard } from './optional-jwt.guard';
 import { createHttpContext } from 'src/testing/http-context';
 

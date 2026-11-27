@@ -1,4 +1,4 @@
-import { Prisma } from '@prisma/client';
+import { Prisma } from 'src/generated/prisma/client';
 import { type TiptapDocument } from 'src/dto';
 
 export const toJsonInput = (

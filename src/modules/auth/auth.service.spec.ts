@@ -9,7 +9,7 @@ import {
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { AdminTheme, Locale, Role } from '@prisma/client';
+import { AdminTheme, Locale, Role } from 'src/generated/prisma/client';
 import { getLoggerToken } from 'pino-nestjs';
 import { AuthService, type JwtPayload } from './auth.service';
 import { SharedUsersService } from 'src/modules/shared/users/shared-users.service';

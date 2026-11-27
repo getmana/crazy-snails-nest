@@ -1,4 +1,4 @@
-import { PrismaClient } from '@prisma/client';
+import { PrismaClient } from 'src/generated/prisma/client';
 import countries from 'i18n-iso-countries';
 
 import en from 'i18n-iso-countries/langs/en.json';

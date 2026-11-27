@@ -1,4 +1,4 @@
-import { Status } from '@prisma/client';
+import { Status } from 'src/generated/prisma/client';
 
 export type CreatePhotoDto = {
   photoId: number;

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { ActivityType } from '@prisma/client';
+import { ActivityType } from 'src/generated/prisma/client';
 import { prismaEnumValues } from 'src/utils';
 
 export const CreateAlbumSchema = z

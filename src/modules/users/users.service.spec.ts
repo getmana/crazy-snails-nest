@@ -8,7 +8,7 @@ import {
 } from '@jest/globals';
 import { Test } from '@nestjs/testing';
 import argon2 from 'argon2';
-import { AdminTheme, Locale, Role } from '@prisma/client';
+import { AdminTheme, Locale, Role } from 'src/generated/prisma/client';
 import { UsersService } from './users.service';
 import { PrismaService } from 'src/modules/prisma/prisma.service';
 import {
